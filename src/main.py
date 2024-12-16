@@ -17,7 +17,7 @@ __PLUGIN STRUCTURE :__
 - An entrypoint file for the plugin. Naming convention is the first letter of each word of the plugin name, in uppercase
 - (if required) A dependencies directory containing the dependencies of the plugin
 
-__IN-HOUSE MASTER PLUGINS LIST (Author = "Red") :__
+__IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 
 - SimpleOps (lightweight ops like dices, stats, pings etc.) - THIS PLUGIN IS MANDATORY
 - MyLittleBanking (a banking system for discord users, mimics some real life things but it's just a game, right?)
