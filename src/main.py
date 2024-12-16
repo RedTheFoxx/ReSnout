@@ -25,4 +25,21 @@ __IN-HOUSE MASTER PLUGINS LIST (Author = "Red") :__
 - More to come ...
 """
 
-pass
+import os
+import discord
+from discord.ext import commands
+
+# ReSnout is an omniscient bot, but it is not an admin
+intents = discord.Intents.default()
+intents.message_content = True
+intents.members = True
+intents.presences = True
+
+BOT_TOKEN = os.getenv('ENV_BOT_TOKEN')
+bot = commands.Bot(command_prefix='!', intents=intents)
+
+@bot.event
+async def on_ready():
+    print(f'{bot.user} est en ligne !')
+
+bot.run(BOT_TOKEN)
