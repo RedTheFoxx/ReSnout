@@ -37,12 +37,19 @@ intents.members = True
 intents.presences = True
 
 BOT_TOKEN = os.getenv('ENV_BOT_TOKEN')
-bot = commands.Bot(command_prefix='!', intents=intents)
+bot = commands.Bot(command_prefix='/', intents=intents)
 plugin_loader = AddinLoader(bot)
 
 @bot.event
 async def on_ready():
     print(f'🤖 {bot.user} is now online!')
+
     await plugin_loader.load_all_plugins()
+
+    try:
+        synced = await bot.tree.sync()
+        print(f"✅ Synced {len(synced)} command(s)")
+    except Exception as e:
+        print(f"❌ Failed to sync commands: {e}")
 
 bot.run(BOT_TOKEN)
