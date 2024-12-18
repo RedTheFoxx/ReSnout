@@ -28,6 +28,7 @@ __IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 import os
 import discord
 from discord.ext import commands
+from core.addins_loader import AddinLoader
 
 # ReSnout is an omniscient bot, but it is not an admin
 intents = discord.Intents.default()
@@ -37,9 +38,11 @@ intents.presences = True
 
 BOT_TOKEN = os.getenv('ENV_BOT_TOKEN')
 bot = commands.Bot(command_prefix='!', intents=intents)
+plugin_loader = AddinLoader(bot)
 
 @bot.event
 async def on_ready():
-    print(f'{bot.user} est en ligne !')
+    print(f'🤖 {bot.user} is now online!')
+    await plugin_loader.load_all_plugins()
 
 bot.run(BOT_TOKEN)
