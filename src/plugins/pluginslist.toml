@@ -1,13 +1,15 @@
-# Declare here the plugins to load. They must be declared below.
+# Declare here the ENABLED plugins to load them at bot startup. They must be declared in the "declared" part.
+# ----- ENABLED PLUGINS -----
 
 [plugins]
 enabled = [
     "SimpleOps",
-    "MyLittleBanking",
-    "TSME"
+#    "MyLittleBanking",
+#    "TSME"
 ]
 
-# Declare here the installed plugins and their attributes
+# ----- DECLARED PLUGINS -----
+# Declare here the installed (but not necessarily enabled) plugins and their attributes
 # Path format: "plugins.pluginname.plugin_entrypoint"
 # Class format : "PluginName"
 # Required is a boolean, true if the plugin is mandatory, false otherwise
