@@ -1,5 +1,5 @@
-# Declare here the ENABLED plugins to load them at bot startup. They must be declared in the "declared" part.
 # ----- ENABLED PLUGINS -----
+# Declare here the ENABLED plugins to load them at bot startup. They must be declared in the "declared" part.
 
 [plugins]
 enabled = [
