@@ -1,0 +1,28 @@
+# Declare here the plugins to load. They must be declared below.
+
+[plugins]
+enabled = [
+    "SimpleOps",
+    "MyLittleBanking",
+    "TSME"
+]
+
+# Declare here the installed plugins and their attributes
+# Path format: "plugins.pluginname.plugin_entrypoint"
+# Class format : "PluginName"
+# Required is a boolean, true if the plugin is mandatory, false otherwise
+
+[SimpleOps]
+path = "plugins.SimpleOps.SO"
+class = "SimpleOps"
+required = true
+
+[MyLittleBanking]
+path = "plugins.MyLittleBanking.MLB"
+class = "MyLittleBanking"
+required = false
+
+[TSME]
+path = "plugins.TSME.TSME"
+class = "TSME"
+required = false
