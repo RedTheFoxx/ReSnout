@@ -45,13 +45,15 @@ plugin_loader = AddinLoader(bot)
 async def on_ready():
     print(f"🤖 {bot.user} is now online!")
 
-    await plugin_loader.load_all_plugins()
-
     try:
+        await plugin_loader.load_all_plugins()
+
         synced = await bot.tree.sync()
         print(f"✅ Synced {len(synced)} command(s)")
+
     except Exception as e:
-        print(f"❌ Failed to sync commands: {e}")
+        print(f"❌ {e}")
+        await bot.close()
 
 
 bot.run(BOT_TOKEN)
