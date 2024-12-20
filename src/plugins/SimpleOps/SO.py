@@ -1,4 +1,7 @@
-"""A ReSnout plugin. Check its bio in its .toml companion file."""
+"""
+SimpleOps is a plugin used to perform simple operations on the bot.
+Check its bio in its .toml companion file.
+""" 
 
 import discord
 from discord import app_commands

@@ -4,8 +4,7 @@
 [plugins]
 enabled = [
     "SimpleOps",
-#    "MyLittleBanking",
-#    "TSME"
+    "RichNotifier"
 ]
 
 # ----- DECLARED PLUGINS -----
@@ -19,12 +18,7 @@ path = "plugins.SimpleOps.SO"
 class = "SimpleOps"
 required = true
 
-[MyLittleBanking]
-path = "plugins.MyLittleBanking.MLB"
-class = "MyLittleBanking"
-required = false
-
-[TSME]
-path = "plugins.TSME.TSME"
-class = "TSME"
+[RichNotifier]
+path = "plugins.RichNotifier.RN"
+class = "RichNotifier"
 required = false
