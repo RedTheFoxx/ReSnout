@@ -1,0 +1,6 @@
+[metadata]
+name = "RichNotifier"
+description = "RichNotifier is a plugin used to notify users with an embed."
+commands = [
+    "notifyall"
+]
