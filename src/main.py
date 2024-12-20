@@ -9,20 +9,19 @@ This metadata is a string representation of the plugin, and is used to load the 
 __HOW TO ?__
 
 At launch, or when asked a reloading, the bot will scan its plugins directory and seek the plugin store .toml file.
-Any decoded metadata string in the .toml config file will instruct the bot to load the corresponding plugin.
+Any correctly declared and activated plugin will be dynamically loaded at runtime.
+Some time may be required for the command tree to be fully loaded, so be patient (it's a Discord thing).
 
 __PLUGIN STRUCTURE :__
 
-- A .toml companion file (metadata) for the plugin. ReSnout use those files to load the plugins and one plugin may use it to discover its dependencies.
-- An entrypoint file for the plugin. Naming convention is the first letter of each word of the plugin name, in uppercase
-- (if required) A dependencies directory containing the dependencies of the plugin
+- A .toml companion file (metadata) for the plugin exposing its informations.
+- An entrypoint file for the plugin. Naming convention is the first letter of each word of the plugin name, in uppercase.
+- An optional dependencies directory containing the dependencies of the plugin.
 
 __IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 
 - SimpleOps (lightweight ops like dices, stats, pings etc.) - THIS PLUGIN IS MANDATORY
-- MyLittleBanking (a banking system for discord users, mimics some real life things but it's just a game, right?)
-- TSME (They see me rollin' dices for any local RP in your Discord server)
-- More to come ...
+- RichNotifier (notify users with an embed)
 """
 
 import os
@@ -37,8 +36,17 @@ intents.members = True
 intents.presences = True
 
 BOT_TOKEN = os.getenv("ENV_BOT_TOKEN")
+
 bot = commands.Bot(command_prefix="/", intents=intents)
 plugin_loader = AddinLoader(bot)
+
+
+async def sync_commands():
+    try:
+        await bot.tree.sync()
+        print(f"✅ Synced {len(bot.tree.get_commands())} commands with all servers!")
+    except Exception as e:
+        print(f"❌ Failed to sync commands. Error: {e}")
 
 
 @bot.event
@@ -46,10 +54,8 @@ async def on_ready():
     print(f"🤖 {bot.user} is now online!")
 
     try:
-        await plugin_loader.load_all_plugins()
-
-        synced = await bot.tree.sync()
-        print(f"✅ Synced {len(synced)} command(s)")
+        await plugin_loader.load_plugins()
+        await sync_commands()
 
     except Exception as e:
         print(f"❌ {e}")
