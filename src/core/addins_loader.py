@@ -1,8 +1,12 @@
-"""Plugin loading operations for ReSnout. 'Addins' is the internal name for plugins."""
+"""
+Plugin loading operations for ReSnout. 'Addins' is the internal name for plugins.
+Only the main entrypoint is authorized to load the plugins. Exposes some getters.
+"""
 
 import toml
 import importlib
 from pathlib import Path
+import inspect
 
 
 class AddinLoader:
@@ -11,7 +15,7 @@ class AddinLoader:
         self.loaded_plugins = []
         self.config_path = Path(__file__).parent.parent / "plugins" / "pluginslist.toml"
 
-    def load_config(self):
+    def _load_config(self):
         """Load the plugins configuration from TOML file."""
         try:
             with open(self.config_path, "r") as f:
@@ -21,7 +25,7 @@ class AddinLoader:
             print(f"❌ Failed to load plugin configuration: {e}")
             return None
 
-    async def load_plugin(self, plugin_name, plugin_config):
+    async def _load_plugin(self, plugin_name, plugin_config):
         """Load a single plugin using its configuration."""
         try:
             # Import the module dynamically
@@ -45,11 +49,11 @@ class AddinLoader:
                 raise Exception(f"Required plugin {plugin_name} failed to load")
             return False
 
-    async def load_all_plugins(self):
+    async def _load_all_plugins(self):
         """Load all enabled plugins from configuration."""
         print("\n📦 Starting plugin loading sequence...")
 
-        config = self.load_config()
+        config = self._load_config()
         if not config:
             raise Exception("Failed to load configuration.")
 
@@ -58,7 +62,7 @@ class AddinLoader:
 
         for plugin_name in enabled_plugins:
             if plugin_name in config:
-                success = await self.load_plugin(plugin_name, config[plugin_name])
+                success = await self._load_plugin(plugin_name, config[plugin_name])
                 if not success and config[plugin_name].get("required", False):
                     required_plugins_failed.append(plugin_name)
             else:
@@ -77,3 +81,18 @@ class AddinLoader:
         for plugin in self.loaded_plugins:
             print(f"   • {plugin}")
         print("")
+
+    async def load_plugins(self):
+        """Load plugins (only if called from main.py)"""
+        caller_frame = inspect.currentframe().f_back
+        caller_file_path = inspect.getfile(caller_frame)
+        main_file_path = str(Path(__file__).parent.parent / "main.py").replace("\\","/")
+
+        if caller_file_path.replace("\\","/") == main_file_path:
+            await self._load_all_plugins()
+        else:
+            print("❌ Plugin loading can only be initiated from main.py")
+            raise Exception("Plugin loading can only be initiated from main.py")
+
+    async def get_loaded_plugins(self):
+        return self.loaded_plugins
