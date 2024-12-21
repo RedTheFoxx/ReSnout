@@ -4,7 +4,8 @@
 [plugins]
 enabled = [
     "SimpleOps",
-    "RichNotifier"
+    "RichNotifier",
+    "MusicPlayer"
 ]
 
 # ----- DECLARED PLUGINS -----
@@ -21,4 +22,9 @@ required = true
 [RichNotifier]
 path = "plugins.RichNotifier.RN"
 class = "RichNotifier"
+required = false
+
+[MusicPlayer]
+path = "plugins.MusicPlayer.MP"
+class = "MusicPlayer"
 required = false
