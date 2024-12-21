@@ -21,7 +21,8 @@ __PLUGIN STRUCTURE :__
 __IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 
 - SimpleOps (lightweight ops like dices, stats, pings etc.) - THIS PLUGIN IS MANDATORY
-- RichNotifier (notify users with an embed)
+- RichNotifier (build embeds and special notifications on the fly)
+- MusicPlayer (play audio from any YT link and more)
 """
 
 import os
