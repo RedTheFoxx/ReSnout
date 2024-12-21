@@ -13,13 +13,13 @@ class RichNotifier(commands.Cog):
         self.bot = bot
 
     @app_commands.command(
-        name="notifyall", description="Notify all users with a customizable embed"
+        name="notifyall", description="Envoyer une notification à tout le monde (everyone) formaté dans un embed."
     )
     @app_commands.describe(
-        message="The main content of the notification",
-        title="The title of the embed (optional)",
-        color="The color of the embed (e.g., red, blue, green, or a hex code, optional)",
-        footer="The footer text of the embed (optional)",
+        message="Le contenu principal de l'embed",
+        title="Le titre de l'embed (optionnel)",
+        color="La couleur de l'embed (par exemple, rouge, bleu, vert, ou un code hexa, optionnel)",
+        footer="Le texte du pied de page de l'embed (optionnel)",
     )
     async def notifyall(
         self,
@@ -43,7 +43,7 @@ class RichNotifier(commands.Cog):
                 )
             except (ValueError, AttributeError):
                 await interaction.response.send_message(
-                    "Invalid color format. Please use a valid color name (e.g., red, blue) or a hex code (e.g., 0xFF0000).",
+                    "Code couleur invalide. Veuillez fournir un code couleur valide (par exemple, 0xFF0000 pour rouge).",
                     ephemeral=True,
                 )
                 return

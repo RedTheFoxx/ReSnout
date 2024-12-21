@@ -2,5 +2,6 @@
 name = "SimpleOps"
 description = "SimpleOps is a plugin used to perform simple operations with the bot."
 commands = [
-    "gw"
+    "gw",
+    "roll"
 ]
