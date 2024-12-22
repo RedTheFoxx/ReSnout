@@ -1,5 +1,6 @@
 import sys
 import os
+
 # Add to python path to use local plugin files dependencies
 sys.path.append(os.path.dirname(__file__))
 
@@ -8,6 +9,41 @@ from discord import app_commands
 from discord.ext import commands
 
 from audio_stream import AudioManager
+
+
+class MusicControlButtons(discord.ui.View):
+    def __init__(self, music_player):
+        super().__init__(timeout=None)
+        self.music_player = music_player
+        self.is_paused = False
+
+    @discord.ui.button(label="⏸️ Pause", style=discord.ButtonStyle.secondary)
+    async def pause_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if not self.is_paused:
+            await self.music_player.audio_manager.pause_music(interaction)
+            button.label = "▶️ Resume"
+            self.is_paused = True
+        else:
+            await self.music_player.audio_manager.resume_music(interaction)
+            button.label = "⏸️ Pause"
+            self.is_paused = False
+        await interaction.followup.edit_message(
+            message_id=interaction.message.id, view=self
+        )
+
+    @discord.ui.button(label="⏹️ Stop", style=discord.ButtonStyle.danger)
+    async def stop_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await self.music_player.audio_manager.stop_music(interaction)
+        # Disable all buttons after stopping
+        for child in self.children:
+            child.disabled = True
+        await interaction.followup.edit_message(
+            message_id=interaction.message.id, view=self
+        )
 
 
 class MusicPlayer(commands.Cog):
@@ -23,7 +59,16 @@ class MusicPlayer(commands.Cog):
                 "URL invalide. Veuillez fournir une URL YouTube valide.", ephemeral=True
             )
             return
+
+        # Tell Discord GW that the response will be long (music will play)
+        await interaction.response.defer(ephemeral=True)
+
+        # Build the buttons for the music player
+        view = MusicControlButtons(self)
         await self.audio_manager.play_music(interaction, url)
+        await interaction.followup.send(
+            "Contrôles de lecture:", view=view, ephemeral=True
+        )
 
     @app_commands.command(
         name="stop", description="Arrêter la musique en cours de lecture."
