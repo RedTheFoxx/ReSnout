@@ -1,5 +1,7 @@
 import sys
 import os
+from collections import deque
+from typing import Optional
 
 # Add to python path to use local plugin files dependencies
 sys.path.append(os.path.dirname(__file__))
@@ -8,7 +10,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 
-from audio_stream import AudioManager
+from streaming import AudioManager
 
 
 class MusicControlButtons(discord.ui.View):
@@ -50,18 +52,45 @@ class MusicPlayer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.audio_manager = AudioManager(bot)
+        self.playlist = deque()  # File d'attente pour les URLs
 
-    @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
-    @app_commands.describe(url="L'URL YouTube à lire.")
-    async def play(self, interaction: discord.Interaction, url: str):
+    @app_commands.command(
+        name="add", description="Ajouter une vidéo YouTube à la file d'attente"
+    )
+    @app_commands.describe(url="L'URL YouTube à ajouter à la file d'attente.")
+    async def add(self, interaction: discord.Interaction, url: str):
         if "youtube.com" not in url:
             await interaction.response.send_message(
                 "URL invalide. Veuillez fournir une URL YouTube valide.", ephemeral=True
             )
             return
 
+        self.playlist.append(url)
+        position = len(self.playlist)
+        await interaction.response.send_message(
+            f"Vidéo ajoutée à la file d'attente en position {position}.", ephemeral=True
+        )
+
+    @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
+    @app_commands.describe(url="L'URL YouTube à lire (optionnel).")
+    async def play(self, interaction: discord.Interaction, url: Optional[str] = None):
         # Tell Discord GW that the response will be long (music will play)
         await interaction.response.defer(ephemeral=True)
+
+        if url is None:
+            if not self.playlist:
+                await interaction.followup.send(
+                    "La file d'attente est vide. Veuillez fournir une URL ou ajouter des vidéos avec /add.",
+                    ephemeral=True,
+                )
+                return
+            url = self.playlist.popleft()
+
+        elif "youtube.com" not in url:
+            await interaction.followup.send(
+                "URL invalide. Veuillez fournir une URL YouTube valide.", ephemeral=True
+            )
+            return
 
         # Build the buttons for the music player
         view = MusicControlButtons(self)
