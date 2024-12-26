@@ -159,7 +159,7 @@ class MusicPlayer(commands.Cog):
         view = MusicControlButtons(self)
         await self.audio_manager.play_music(interaction, url)
         await interaction.followup.send(
-            "Contrôles de lecture:", view=view, ephemeral=True
+            "---- Contrôles ----", view=view, ephemeral=True
         )
         await self.update_info_message(interaction, "Lecture en cours ...")
 
