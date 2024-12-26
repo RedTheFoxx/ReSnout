@@ -110,18 +110,29 @@ class MusicPlayer(commands.Cog):
             f"File d'attente:\n{playlist_str}", ephemeral=True
         )
 
-    @app_commands.command(name="clear", description="Vider la file d'attente.")
-    async def clear(self, interaction: discord.Interaction):
+    @app_commands.command(name="clear", description="Vider la file d'attente ou supprimer un élément spécifique.")
+    @app_commands.describe(index="L'index de l'élément à supprimer (optionnel).")
+    async def clear(self, interaction: discord.Interaction, index: Optional[int] = None):
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est déjà vide.", ephemeral=True
             )
             return
 
-        self.playlist.clear()
-        await interaction.response.send_message(
-            "La file d'attente a été vidée.", ephemeral=True
-        )
+        if index is None:
+            self.playlist.clear()
+            await interaction.response.send_message(
+                "La file d'attente a été vidée.", ephemeral=True
+            )
+        elif 1 <= index <= len(self.playlist):
+            del self.playlist[index - 1]
+            await interaction.response.send_message(
+                f"L'élément à la position {index} a été supprimé de la file d'attente.", ephemeral=True
+            )
+        else:
+            await interaction.response.send_message(
+                "Index invalide. Veuillez spécifier un index valide dans la file d'attente.", ephemeral=True
+            )
 
     @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
     @app_commands.describe(url="L'URL YouTube à lire (optionnel).")
