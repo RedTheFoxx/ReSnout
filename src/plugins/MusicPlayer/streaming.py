@@ -23,6 +23,7 @@ class AudioManager:
     def __init__(self, bot):
         self.bot = bot
         self.voice_clients = {}
+        self.skip_flag = False
 
     async def connect_to_voice_channel(self, interaction: discord.Interaction):
         if not interaction.user.voice:
@@ -73,7 +74,8 @@ class AudioManager:
             source = await YTDLSource.from_url(url, loop=self.bot.loop, stream=True)
             if voice_client.is_playing():
                 voice_client.stop()
-            voice_client.play(source)
+            self.skip_flag = False
+            voice_client.play(source, after=lambda e: self.after_play(interaction, e))
 
             # Use followup if interaction is already responded
             if interaction.response.is_done():
@@ -97,9 +99,25 @@ class AudioManager:
                     ephemeral=True,
                 )
 
+    def after_play(self, interaction: discord.Interaction, error):
+        if error:
+            print(f"Erreur lors de la lecture : {error}")
+        elif self.skip_flag:
+            return
+        else:
+            # Get the music player instance from the bot
+            music_player = self.bot.get_cog("MusicPlayer")
+            if music_player and music_player.playlist:
+                next_url = music_player.playlist.popleft()
+                self.bot.loop.create_task(self.play_music(interaction, next_url))
+                self.bot.loop.create_task(music_player.update_info_message(interaction, "Lecture de la vidéo suivante ..."))
+            else:
+                self.bot.loop.create_task(music_player.update_info_message(interaction, "File d'attente terminée"))
+
     async def skip_music(self, interaction: discord.Interaction):
         voice_client = self.voice_clients.get(interaction.guild.id)
         if voice_client and voice_client.is_playing():
+            self.skip_flag = True
             voice_client.stop()
 
     async def stop_music(self, interaction: discord.Interaction):
