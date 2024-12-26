@@ -12,6 +12,7 @@ from discord.ext import commands
 
 from streaming import AudioManager
 from player_view import MusicControlButtons
+import yt_dlp
 
 
 class MusicPlayer(commands.Cog):
@@ -44,7 +45,7 @@ class MusicPlayer(commands.Cog):
             )
 
     @app_commands.command(
-        name="add", description="Ajouter une vidéo YouTube à la file d'attente"
+        name="add", description="Ajouter une vidéo ou une playlist YouTube à la file d'attente"
     )
     @app_commands.describe(url="L'URL YouTube à ajouter à la file d'attente.")
     async def add(self, interaction: discord.Interaction, url: str):
@@ -54,11 +55,44 @@ class MusicPlayer(commands.Cog):
             )
             return
 
-        self.playlist.append(url)
-        position = len(self.playlist)
-        await interaction.response.send_message(
-            f"Vidéo ajoutée à la file d'attente en position {position}.", ephemeral=True
-        )
+        await interaction.response.defer(ephemeral=True)
+
+        try:
+            ydl_opts = {
+                "quiet": True,
+                "no_warnings": True,
+                "noplaylist": False,  # S'assurer que les playlists sont traitées
+                "extract_flat": False,  # Ne pas utiliser l'extraction plate pour avoir toutes les entrées
+                "ignoreerrors": True,
+                "no_color": True
+            }
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(url, download=False)
+                
+                if "entries" in info:  # C'est une playlist
+                    added_count = 0
+                    for entry in info["entries"]:
+                        if entry and "id" in entry:
+                            video_url = f"https://www.youtube.com/watch?v={entry['id']}"
+                            self.playlist.append(video_url)
+                            added_count += 1
+                    
+                    await interaction.followup.send(
+                        f"{added_count} vidéos de la playlist ont été ajoutées à la file d'attente.", 
+                        ephemeral=True
+                    )
+                else:  # C'est une vidéo unique
+                    self.playlist.append(url)
+                    position = len(self.playlist)
+                    await interaction.followup.send(
+                        f"Vidéo ajoutée à la file d'attente en position {position}.", 
+                        ephemeral=True
+                    )
+        except Exception as e:
+            await interaction.followup.send(
+                f"Une erreur est survenue lors de l'ajout : {str(e)}", 
+                ephemeral=True
+            )
 
     @app_commands.command(name="list", description="Afficher la file d'attente.")
     async def list(self, interaction: discord.Interaction):
