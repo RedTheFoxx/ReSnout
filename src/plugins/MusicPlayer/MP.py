@@ -134,6 +134,37 @@ class MusicPlayer(commands.Cog):
         await interaction.response.send_message(
             f"Vidéo ajoutée à la file d'attente en position {position}.", ephemeral=True
         )
+    
+    @app_commands.command(
+        name="list", description="Afficher la file d'attente."
+    )
+    async def list(self, interaction: discord.Interaction):
+        if not self.playlist:
+            await interaction.response.send_message(
+                "La file d'attente est vide.", ephemeral=True
+            )
+            return
+        
+        # Create a string with all the URLs in the playlist
+        playlist_str = "\n".join([f"{i+1}. {url}" for i, url in enumerate(self.playlist)])
+        await interaction.response.send_message(
+            f"File d'attente:\n{playlist_str}", ephemeral=True
+        )
+
+    @app_commands.command(
+        name="clear", description="Vider la file d'attente."
+    )
+    async def clear(self, interaction: discord.Interaction):
+        if not self.playlist:
+            await interaction.response.send_message(
+                "La file d'attente est déjà vide.", ephemeral=True
+            )
+            return
+        
+        self.playlist.clear()
+        await interaction.response.send_message(
+            "La file d'attente a été vidée.", ephemeral=True
+        )
 
     @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
     @app_commands.describe(url="L'URL YouTube à lire (optionnel).")
