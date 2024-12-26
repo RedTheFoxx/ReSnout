@@ -34,14 +34,14 @@ class MusicPlayer(commands.Cog):
     async def update_info_message(self, interaction: discord.Interaction, content: str):
         if self.info_message:
             try:
-                await self.info_message.edit(content=f"Information : {content}")
+                await self.info_message.edit(content=f"Statut du lecteur : {content}")
             except discord.NotFound:
                 self.info_message = await interaction.channel.send(
-                    f"Information : {content}"
+                    f"Statut du lecteur : {content}"
                 )
         else:
             self.info_message = await interaction.channel.send(
-                f"Information : {content}"
+                f"Statut du lecteur : {content}"
             )
 
     @app_commands.command(
