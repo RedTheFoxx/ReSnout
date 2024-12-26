@@ -47,6 +47,24 @@ class MusicControlButtons(discord.ui.View):
             message_id=interaction.message.id, view=self
         )
 
+    @discord.ui.button(label="⏭️ Skip", style=discord.ButtonStyle.primary)
+    async def skip_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        if not self.music_player.playlist:
+            await interaction.followup.send(
+                "Il n'y a rien en file d'attente.", ephemeral=True
+            )
+            return
+
+        # Stop the current song and play the next one
+        await self.music_player.audio_manager.skip_music(interaction)
+        next_url = self.music_player.playlist.popleft()
+        await self.music_player.audio_manager.play_music(interaction, next_url)
+        await interaction.followup.send(
+            "Passage à l'élément suivant depuis la file d'attente.", ephemeral=True
+        )
+
 
 class MusicPlayer(commands.Cog):
     def __init__(self, bot):
@@ -116,6 +134,24 @@ class MusicPlayer(commands.Cog):
     )
     async def resume(self, interaction: discord.Interaction):
         await self.audio_manager.resume_music(interaction)
+
+    @app_commands.command(
+        name="skip", description="Passer à la musique suivante dans la file d'attente."
+    )
+    async def skip(self, interaction: discord.Interaction):
+        if not self.playlist:
+            await interaction.response.send_message(
+                "Il n'y a rien en file d'attente.", ephemeral=True
+            )
+            return
+
+        # Stop the current song and play the next one
+        await self.audio_manager.skip_music(interaction)
+        next_url = self.playlist.popleft()
+        await self.audio_manager.play_music(interaction, next_url)
+        await interaction.response.send_message(
+            "Passage à l'élément suivant depuis la file d'attente.", ephemeral=True
+        )
 
 
 async def setup(bot):

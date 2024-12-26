@@ -97,6 +97,11 @@ class AudioManager:
                     ephemeral=True,
                 )
 
+    async def skip_music(self, interaction: discord.Interaction):
+        voice_client = self.voice_clients.get(interaction.guild.id)
+        if voice_client and voice_client.is_playing():
+            voice_client.stop()
+
     async def stop_music(self, interaction: discord.Interaction):
         voice_client = self.voice_clients.get(interaction.guild.id)
         if voice_client and voice_client.is_connected():
