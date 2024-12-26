@@ -5,5 +5,8 @@ commands = [
     "play",
     "stop",
     "pause",
-    "resume"
+    "skip",
+    "resume",
+    "list",
+    "clear"
 ]
