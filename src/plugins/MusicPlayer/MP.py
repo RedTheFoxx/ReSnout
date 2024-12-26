@@ -7,12 +7,12 @@ from typing import Optional
 sys.path.append(os.path.dirname(__file__))
 
 import discord
+import yt_dlp
 from discord import app_commands
 from discord.ext import commands
 
 from streaming import AudioManager
 from player_view import MusicControlButtons
-import yt_dlp
 
 
 class MusicPlayer(commands.Cog):
@@ -45,7 +45,8 @@ class MusicPlayer(commands.Cog):
             )
 
     @app_commands.command(
-        name="add", description="Ajouter une vidéo ou une playlist YouTube à la file d'attente"
+        name="add",
+        description="Ajouter une vidéo ou une playlist YouTube à la file d'attente",
     )
     @app_commands.describe(url="L'URL YouTube à ajouter à la file d'attente.")
     async def add(self, interaction: discord.Interaction, url: str):
@@ -64,11 +65,11 @@ class MusicPlayer(commands.Cog):
                 "noplaylist": False,  # S'assurer que les playlists sont traitées
                 "extract_flat": False,  # Ne pas utiliser l'extraction plate pour avoir toutes les entrées
                 "ignoreerrors": True,
-                "no_color": True
+                "no_color": True,
             }
             with yt_dlp.YoutubeDL(ydl_opts) as ydl:
                 info = ydl.extract_info(url, download=False)
-                
+
                 if "entries" in info:  # C'est une playlist
                     added_count = 0
                     for entry in info["entries"]:
@@ -76,22 +77,21 @@ class MusicPlayer(commands.Cog):
                             video_url = f"https://www.youtube.com/watch?v={entry['id']}"
                             self.playlist.append(video_url)
                             added_count += 1
-                    
+
                     await interaction.followup.send(
-                        f"{added_count} vidéos de la playlist ont été ajoutées à la file d'attente.", 
-                        ephemeral=True
+                        f"{added_count} vidéos de la playlist ont été ajoutées à la file d'attente.",
+                        ephemeral=True,
                     )
                 else:  # C'est une vidéo unique
                     self.playlist.append(url)
                     position = len(self.playlist)
                     await interaction.followup.send(
-                        f"Vidéo ajoutée à la file d'attente en position {position}.", 
-                        ephemeral=True
+                        f"Vidéo ajoutée à la file d'attente en position {position}.",
+                        ephemeral=True,
                     )
         except Exception as e:
             await interaction.followup.send(
-                f"Une erreur est survenue lors de l'ajout : {str(e)}", 
-                ephemeral=True
+                f"Une erreur est survenue lors de l'ajout : {str(e)}", ephemeral=True
             )
 
     @app_commands.command(name="list", description="Afficher la file d'attente.")
@@ -110,9 +110,14 @@ class MusicPlayer(commands.Cog):
             f"File d'attente:\n{playlist_str}", ephemeral=True
         )
 
-    @app_commands.command(name="clear", description="Vider la file d'attente ou supprimer un élément spécifique.")
+    @app_commands.command(
+        name="clear",
+        description="Vider la file d'attente ou supprimer un élément spécifique.",
+    )
     @app_commands.describe(index="L'index de l'élément à supprimer (optionnel).")
-    async def clear(self, interaction: discord.Interaction, index: Optional[int] = None):
+    async def clear(
+        self, interaction: discord.Interaction, index: Optional[int] = None
+    ):
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est déjà vide.", ephemeral=True
@@ -127,11 +132,13 @@ class MusicPlayer(commands.Cog):
         elif 1 <= index <= len(self.playlist):
             del self.playlist[index - 1]
             await interaction.response.send_message(
-                f"L'élément à la position {index} a été supprimé de la file d'attente.", ephemeral=True
+                f"L'élément à la position {index} a été supprimé de la file d'attente.",
+                ephemeral=True,
             )
         else:
             await interaction.response.send_message(
-                "Index invalide. Veuillez spécifier un index valide dans la file d'attente.", ephemeral=True
+                "Index invalide. Veuillez spécifier un index valide dans la file d'attente.",
+                ephemeral=True,
             )
 
     @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
