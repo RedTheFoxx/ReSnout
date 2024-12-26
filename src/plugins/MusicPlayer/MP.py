@@ -24,14 +24,14 @@ class MusicControlButtons(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.defer()
-        
-        if not self.is_paused: # Check if the music is already paused
+
+        if not self.is_paused:  # Check if the music is already paused
             await self.music_player.audio_manager.pause_music(interaction)
             self.is_paused = True
             button.disabled = True
             self.resume_button.disabled = False
             await self.music_player.update_info_message(interaction, "Lecture en pause")
-        
+
         try:
             await interaction.message.edit(view=self)
         except discord.NotFound:
@@ -42,14 +42,16 @@ class MusicControlButtons(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.defer()
-        
-        if self.is_paused: # Check if the music is paused before resuming
+
+        if self.is_paused:  # Check if the music is paused before resuming
             await self.music_player.audio_manager.resume_music(interaction)
             self.is_paused = False
             button.disabled = True
             self.pause_button.disabled = False
-            await self.music_player.update_info_message(interaction, "Lecture en cours ...")
-        
+            await self.music_player.update_info_message(
+                interaction, "Lecture en cours ..."
+            )
+
         try:
             await interaction.message.edit(view=self)
         except discord.NotFound:
@@ -60,13 +62,13 @@ class MusicControlButtons(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.defer()
-        
+
         await self.music_player.audio_manager.stop_music(interaction)
         await self.music_player.delete_info_message()
         # Disable all buttons after stopping
         for child in self.children:
             child.disabled = True
-            
+
         try:
             await interaction.message.edit(view=self)
         except discord.NotFound:
@@ -77,7 +79,7 @@ class MusicControlButtons(discord.ui.View):
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
         await interaction.response.defer()
-        
+
         if not self.music_player.playlist:
             try:
                 await interaction.followup.send(
@@ -91,7 +93,10 @@ class MusicControlButtons(discord.ui.View):
         await self.music_player.audio_manager.skip_music(interaction)
         next_url = self.music_player.playlist.popleft()
         await self.music_player.audio_manager.play_music(interaction, next_url)
-        await self.music_player.update_info_message(interaction, "Lecture de la vidéo suivante ...")
+        await self.music_player.update_info_message(
+            interaction, "Lecture de la vidéo suivante ..."
+        )
+
 
 class MusicPlayer(commands.Cog):
     def __init__(self, bot):
@@ -114,9 +119,13 @@ class MusicPlayer(commands.Cog):
             try:
                 await self.info_message.edit(content=f"Information : {content}")
             except discord.NotFound:
-                self.info_message = await interaction.channel.send(f"Information : {content}")
+                self.info_message = await interaction.channel.send(
+                    f"Information : {content}"
+                )
         else:
-            self.info_message = await interaction.channel.send(f"Information : {content}")
+            self.info_message = await interaction.channel.send(
+                f"Information : {content}"
+            )
 
     @app_commands.command(
         name="add", description="Ajouter une vidéo YouTube à la file d'attente"
@@ -134,33 +143,31 @@ class MusicPlayer(commands.Cog):
         await interaction.response.send_message(
             f"Vidéo ajoutée à la file d'attente en position {position}.", ephemeral=True
         )
-    
-    @app_commands.command(
-        name="list", description="Afficher la file d'attente."
-    )
+
+    @app_commands.command(name="list", description="Afficher la file d'attente.")
     async def list(self, interaction: discord.Interaction):
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est vide.", ephemeral=True
             )
             return
-        
+
         # Create a string with all the URLs in the playlist
-        playlist_str = "\n".join([f"{i+1}. {url}" for i, url in enumerate(self.playlist)])
+        playlist_str = "\n".join(
+            [f"{i+1}. {url}" for i, url in enumerate(self.playlist)]
+        )
         await interaction.response.send_message(
             f"File d'attente:\n{playlist_str}", ephemeral=True
         )
 
-    @app_commands.command(
-        name="clear", description="Vider la file d'attente."
-    )
+    @app_commands.command(name="clear", description="Vider la file d'attente.")
     async def clear(self, interaction: discord.Interaction):
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est déjà vide.", ephemeral=True
             )
             return
-        
+
         self.playlist.clear()
         await interaction.response.send_message(
             "La file d'attente a été vidée.", ephemeral=True
