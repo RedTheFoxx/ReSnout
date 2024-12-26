@@ -23,54 +23,100 @@ class MusicControlButtons(discord.ui.View):
     async def pause_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
-        if not self.is_paused:
+        await interaction.response.defer()
+        
+        if not self.is_paused: # Check if the music is already paused
             await self.music_player.audio_manager.pause_music(interaction)
-            button.label = "▶️ Resume"
             self.is_paused = True
-        else:
+            button.disabled = True
+            self.resume_button.disabled = False
+            await self.music_player.update_info_message(interaction, "Lecture en pause")
+        
+        try:
+            await interaction.message.edit(view=self)
+        except discord.NotFound:
+            pass
+
+    @discord.ui.button(label="▶️ Play", style=discord.ButtonStyle.success)
+    async def resume_button(
+        self, interaction: discord.Interaction, button: discord.ui.Button
+    ):
+        await interaction.response.defer()
+        
+        if self.is_paused: # Check if the music is paused before resuming
             await self.music_player.audio_manager.resume_music(interaction)
-            button.label = "⏸️ Pause"
             self.is_paused = False
-        await interaction.followup.edit_message(
-            message_id=interaction.message.id, view=self
-        )
+            button.disabled = True
+            self.pause_button.disabled = False
+            await self.music_player.update_info_message(interaction, "Lecture en cours ...")
+        
+        try:
+            await interaction.message.edit(view=self)
+        except discord.NotFound:
+            pass
 
     @discord.ui.button(label="⏹️ Stop", style=discord.ButtonStyle.danger)
     async def stop_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        await interaction.response.defer()
+        
         await self.music_player.audio_manager.stop_music(interaction)
+        await self.music_player.delete_info_message()
         # Disable all buttons after stopping
         for child in self.children:
             child.disabled = True
-        await interaction.followup.edit_message(
-            message_id=interaction.message.id, view=self
-        )
+            
+        try:
+            await interaction.message.edit(view=self)
+        except discord.NotFound:
+            pass
 
     @discord.ui.button(label="⏭️ Skip", style=discord.ButtonStyle.primary)
     async def skip_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        await interaction.response.defer()
+        
         if not self.music_player.playlist:
-            await interaction.followup.send(
-                "Il n'y a rien en file d'attente.", ephemeral=True
-            )
+            try:
+                await interaction.followup.send(
+                    "Il n'y a rien en file d'attente.", ephemeral=True
+                )
+            except discord.NotFound:
+                pass
             return
 
         # Stop the current song and play the next one
         await self.music_player.audio_manager.skip_music(interaction)
         next_url = self.music_player.playlist.popleft()
         await self.music_player.audio_manager.play_music(interaction, next_url)
-        await interaction.followup.send(
-            "Passage à l'élément suivant depuis la file d'attente.", ephemeral=True
-        )
-
+        await self.music_player.update_info_message(interaction, "Lecture de la vidéo suivante ...")
 
 class MusicPlayer(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         self.audio_manager = AudioManager(bot)
         self.playlist = deque()  # File d'attente pour les URLs
+        self.info_message = None  # Message d'information qui sera mis à jour
+
+    async def delete_info_message(self):
+        if self.info_message:
+            try:
+                await self.info_message.delete()
+            except discord.NotFound:
+                pass
+            finally:
+                self.info_message = None
+
+    async def update_info_message(self, interaction: discord.Interaction, content: str):
+        if self.info_message:
+            try:
+                await self.info_message.edit(content=f"Information : {content}")
+            except discord.NotFound:
+                self.info_message = await interaction.channel.send(f"Information : {content}")
+        else:
+            self.info_message = await interaction.channel.send(f"Information : {content}")
 
     @app_commands.command(
         name="add", description="Ajouter une vidéo YouTube à la file d'attente"
@@ -116,27 +162,31 @@ class MusicPlayer(commands.Cog):
         await interaction.followup.send(
             "Contrôles de lecture:", view=view, ephemeral=True
         )
+        await self.update_info_message(interaction, "Lecture en cours ...")
 
     @app_commands.command(
-        name="stop", description="Arrêter la musique en cours de lecture."
+        name="stop", description="Arrêter la vidéo en cours de lecture."
     )
     async def stop(self, interaction: discord.Interaction):
         await self.audio_manager.stop_music(interaction)
+        await self.delete_info_message()
 
     @app_commands.command(
-        name="pause", description="Mettre en pause la musique en cours de lecture."
+        name="pause", description="Mettre en pause la vidéo en cours de lecture."
     )
     async def pause(self, interaction: discord.Interaction):
         await self.audio_manager.pause_music(interaction)
+        await self.update_info_message(interaction, "Lecture en pause")
 
     @app_commands.command(
-        name="resume", description="Reprendre la lecture de la musique en pause."
+        name="resume", description="Reprendre la lecture de la vidéo en pause."
     )
     async def resume(self, interaction: discord.Interaction):
         await self.audio_manager.resume_music(interaction)
+        await self.update_info_message(interaction, "Lecture en cours ...")
 
     @app_commands.command(
-        name="skip", description="Passer à la musique suivante dans la file d'attente."
+        name="skip", description="Passer à la vidéo suivante dans la file d'attente."
     )
     async def skip(self, interaction: discord.Interaction):
         if not self.playlist:
@@ -149,9 +199,7 @@ class MusicPlayer(commands.Cog):
         await self.audio_manager.skip_music(interaction)
         next_url = self.playlist.popleft()
         await self.audio_manager.play_music(interaction, next_url)
-        await interaction.response.send_message(
-            "Passage à l'élément suivant depuis la file d'attente.", ephemeral=True
-        )
+        await self.update_info_message(interaction, "Lecture de la vidéo suivante ...")
 
 
 async def setup(bot):
