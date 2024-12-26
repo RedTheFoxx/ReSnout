@@ -46,6 +46,7 @@ async def sync_commands():
     try:
         await bot.tree.sync()
         print(f"✅ Synced {len(bot.tree.get_commands())} commands!")
+        print("🤖 Ready to work!")
     except Exception as e:
         print(f"❌ Failed to sync commands. Error: {e}")
 
