@@ -45,7 +45,7 @@ plugin_loader = AddinLoader(bot)
 async def sync_commands():
     try:
         await bot.tree.sync()
-        print(f"✅ Synced {len(bot.tree.get_commands())} commands with all servers!")
+        print(f"✅ Synced {len(bot.tree.get_commands())} commands!")
     except Exception as e:
         print(f"❌ Failed to sync commands. Error: {e}")
 
