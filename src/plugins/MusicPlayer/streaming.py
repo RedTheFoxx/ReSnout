@@ -107,7 +107,6 @@ class AudioManager:
         if voice_client and voice_client.is_connected():
             await voice_client.disconnect()
             del self.voice_clients[interaction.guild.id]
-            await interaction.response.send_message("Lecture arrêtée.", ephemeral=True)
         else:
             await interaction.response.send_message(
                 "Aucune musique en cours de lecture.", ephemeral=True
@@ -117,7 +116,6 @@ class AudioManager:
         voice_client = self.voice_clients.get(interaction.guild.id)
         if voice_client and voice_client.is_playing():
             voice_client.pause()
-            await interaction.response.send_message("Musique en pause.", ephemeral=True)
         else:
             await interaction.response.send_message(
                 "Aucune musique en cours de lecture.", ephemeral=True
@@ -127,7 +125,6 @@ class AudioManager:
         voice_client = self.voice_clients.get(interaction.guild.id)
         if voice_client and voice_client.is_paused():
             voice_client.resume()
-            await interaction.response.send_message("Lecture reprise.", ephemeral=True)
         else:
             await interaction.response.send_message(
                 "Aucune musique en pause.", ephemeral=True
