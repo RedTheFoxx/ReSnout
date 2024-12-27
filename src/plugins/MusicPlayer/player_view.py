@@ -2,7 +2,18 @@ import discord
 
 
 class MusicControlButtons(discord.ui.View):
+    """
+    A Discord UI View that provides interactive buttons for music playback control.
+    Includes buttons for play/pause, stop, and skip functionality.
+    """
+
     def __init__(self, music_player):
+        """
+        Initialize the music control buttons view.
+        
+        Args:
+            music_player: The MusicPlayer instance these controls are attached to
+        """
         super().__init__(timeout=None)
         self.music_player = music_player
         self.is_paused = False
@@ -11,6 +22,14 @@ class MusicControlButtons(discord.ui.View):
     async def pause_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        """
+        Handle the pause button click event.
+        Pauses the currently playing track and updates button states.
+        
+        Args:
+            interaction: The Discord interaction that triggered this button
+            button: The button that was clicked
+        """
         await interaction.response.defer()
 
         if not self.is_paused:  # Check if the music is already paused
@@ -29,6 +48,14 @@ class MusicControlButtons(discord.ui.View):
     async def resume_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        """
+        Handle the play/resume button click event.
+        Resumes playing a paused track and updates button states.
+        
+        Args:
+            interaction: The Discord interaction that triggered this button
+            button: The button that was clicked
+        """
         await interaction.response.defer()
 
         if self.is_paused:  # Check if the music is paused before resuming
@@ -49,6 +76,14 @@ class MusicControlButtons(discord.ui.View):
     async def stop_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        """
+        Handle the stop button click event.
+        Stops playback, disconnects from voice, and disables all buttons.
+        
+        Args:
+            interaction: The Discord interaction that triggered this button
+            button: The button that was clicked
+        """
         await interaction.response.defer()
 
         await self.music_player.audio_manager.stop_music(interaction)
@@ -66,6 +101,14 @@ class MusicControlButtons(discord.ui.View):
     async def skip_button(
         self, interaction: discord.Interaction, button: discord.ui.Button
     ):
+        """
+        Handle the skip button click event.
+        Skips the current track and plays the next item in queue if available.
+        
+        Args:
+            interaction: The Discord interaction that triggered this button
+            button: The button that was clicked
+        """
         await interaction.response.defer()
 
         if not self.music_player.playlist:

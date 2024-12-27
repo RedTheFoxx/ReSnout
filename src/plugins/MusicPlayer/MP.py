@@ -16,13 +16,25 @@ from player_view import MusicControlButtons
 
 
 class MusicPlayer(commands.Cog):
+    """
+    A Discord bot cog that provides music playback functionality from YouTube.
+    Supports playing single videos and playlists with queue management and playback controls.
+    """
+
     def __init__(self, bot):
+        """
+        Initialize the MusicPlayer cog.
+        
+        Args:
+            bot: The Discord bot instance this cog is attached to
+        """
         self.bot = bot
         self.audio_manager = AudioManager(bot)
         self.playlist = deque()  # File d'attente pour les URLs
         self.info_message = None  # Message d'information qui sera mis à jour
 
     async def delete_info_message(self):
+        """Delete the current info message if it exists."""
         if self.info_message:
             try:
                 await self.info_message.delete()
@@ -32,6 +44,13 @@ class MusicPlayer(commands.Cog):
                 self.info_message = None
 
     async def update_info_message(self, interaction: discord.Interaction, content: str):
+        """
+        Update or create an info message about the player's current status.
+        
+        Args:
+            interaction: The Discord interaction that triggered this update
+            content: The new status message to display
+        """
         if self.info_message:
             try:
                 await self.info_message.edit(content=f"Statut du lecteur : {content}")
@@ -50,6 +69,13 @@ class MusicPlayer(commands.Cog):
     )
     @app_commands.describe(url="L'URL YouTube à ajouter à la file d'attente.")
     async def add(self, interaction: discord.Interaction, url: str):
+        """
+        Add a YouTube video or playlist to the queue.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+            url: The YouTube URL to add to the queue
+        """
         if "youtube.com" not in url:
             await interaction.response.send_message(
                 "URL invalide. Veuillez fournir une URL YouTube valide.", ephemeral=True
@@ -96,6 +122,12 @@ class MusicPlayer(commands.Cog):
 
     @app_commands.command(name="list", description="Afficher la file d'attente.")
     async def list(self, interaction: discord.Interaction):
+        """
+        Display the current queue of videos.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+        """
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est vide.", ephemeral=True
@@ -118,6 +150,13 @@ class MusicPlayer(commands.Cog):
     async def clear(
         self, interaction: discord.Interaction, index: Optional[int] = None
     ):
+        """
+        Clear the entire queue or remove a specific item.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+            index: Optional; The index of the item to remove from the queue
+        """
         if not self.playlist:
             await interaction.response.send_message(
                 "La file d'attente est déjà vide.", ephemeral=True
@@ -144,6 +183,13 @@ class MusicPlayer(commands.Cog):
     @app_commands.command(name="play", description="Lire le son d'une vidéo YouTube")
     @app_commands.describe(url="L'URL YouTube à lire (optionnel).")
     async def play(self, interaction: discord.Interaction, url: Optional[str] = None):
+        """
+        Play a YouTube video's audio. If no URL is provided, plays the next item in queue.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+            url: Optional; The YouTube URL to play. If not provided, plays from queue
+        """
         # Tell Discord GW that the response will be long (music will play)
         await interaction.response.defer(ephemeral=True)
 
@@ -174,6 +220,12 @@ class MusicPlayer(commands.Cog):
         name="stop", description="Arrêter la vidéo en cours de lecture."
     )
     async def stop(self, interaction: discord.Interaction):
+        """
+        Stop the currently playing audio and disconnect from voice channel.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+        """
         await self.audio_manager.stop_music(interaction)
         await self.delete_info_message()
 
@@ -181,6 +233,12 @@ class MusicPlayer(commands.Cog):
         name="pause", description="Mettre en pause la vidéo en cours de lecture."
     )
     async def pause(self, interaction: discord.Interaction):
+        """
+        Pause the currently playing audio.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+        """
         await self.audio_manager.pause_music(interaction)
         await self.update_info_message(interaction, "Lecture en pause")
 
@@ -188,6 +246,12 @@ class MusicPlayer(commands.Cog):
         name="resume", description="Reprendre la lecture de la vidéo en pause."
     )
     async def resume(self, interaction: discord.Interaction):
+        """
+        Resume playing the paused audio.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+        """
         await self.audio_manager.resume_music(interaction)
         await self.update_info_message(interaction, "Lecture en cours ...")
 
@@ -195,6 +259,12 @@ class MusicPlayer(commands.Cog):
         name="skip", description="Passer à la vidéo suivante dans la file d'attente."
     )
     async def skip(self, interaction: discord.Interaction):
+        """
+        Skip the currently playing audio and play the next item in queue.
+        
+        Args:
+            interaction: The Discord interaction that triggered this command
+        """
         if not self.playlist:
             await interaction.response.send_message(
                 "Il n'y a rien en file d'attente.", ephemeral=True
