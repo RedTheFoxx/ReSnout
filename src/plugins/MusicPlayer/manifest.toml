@@ -1,0 +1,12 @@
+[metadata]
+name = "MusicPlayer"
+description = "A plugin to play music from YouTube."
+commands = [
+    "play",
+    "stop",
+    "pause",
+    "skip",
+    "resume",
+    "list",
+    "clear"
+]

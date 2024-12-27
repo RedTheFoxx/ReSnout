@@ -21,7 +21,8 @@ __PLUGIN STRUCTURE :__
 __IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 
 - SimpleOps (lightweight ops like dices, stats, pings etc.) - THIS PLUGIN IS MANDATORY
-- RichNotifier (notify users with an embed)
+- RichNotifier (build embeds and special notifications on the fly)
+- MusicPlayer (play audio from any YT link and more)
 """
 
 import os
@@ -44,7 +45,8 @@ plugin_loader = AddinLoader(bot)
 async def sync_commands():
     try:
         await bot.tree.sync()
-        print(f"✅ Synced {len(bot.tree.get_commands())} commands with all servers!")
+        print(f"✅ Synced {len(bot.tree.get_commands())} commands!")
+        print("🤖 Ready to work!")
     except Exception as e:
         print(f"❌ Failed to sync commands. Error: {e}")
 
