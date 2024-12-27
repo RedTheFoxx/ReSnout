@@ -24,7 +24,7 @@ class MusicPlayer(commands.Cog):
     def __init__(self, bot):
         """
         Initialize the MusicPlayer cog.
-        
+
         Args:
             bot: The Discord bot instance this cog is attached to
         """
@@ -46,7 +46,7 @@ class MusicPlayer(commands.Cog):
     async def update_info_message(self, interaction: discord.Interaction, content: str):
         """
         Update or create an info message about the player's current status.
-        
+
         Args:
             interaction: The Discord interaction that triggered this update
             content: The new status message to display
@@ -71,7 +71,7 @@ class MusicPlayer(commands.Cog):
     async def add(self, interaction: discord.Interaction, url: str):
         """
         Add a YouTube video or playlist to the queue.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
             url: The YouTube URL to add to the queue
@@ -124,7 +124,7 @@ class MusicPlayer(commands.Cog):
     async def list(self, interaction: discord.Interaction):
         """
         Display the current queue of videos.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
         """
@@ -152,7 +152,7 @@ class MusicPlayer(commands.Cog):
     ):
         """
         Clear the entire queue or remove a specific item.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
             index: Optional; The index of the item to remove from the queue
@@ -185,7 +185,7 @@ class MusicPlayer(commands.Cog):
     async def play(self, interaction: discord.Interaction, url: Optional[str] = None):
         """
         Play a YouTube video's audio. If no URL is provided, plays the next item in queue.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
             url: Optional; The YouTube URL to play. If not provided, plays from queue
@@ -222,7 +222,7 @@ class MusicPlayer(commands.Cog):
     async def stop(self, interaction: discord.Interaction):
         """
         Stop the currently playing audio and disconnect from voice channel.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
         """
@@ -235,7 +235,7 @@ class MusicPlayer(commands.Cog):
     async def pause(self, interaction: discord.Interaction):
         """
         Pause the currently playing audio.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
         """
@@ -248,7 +248,7 @@ class MusicPlayer(commands.Cog):
     async def resume(self, interaction: discord.Interaction):
         """
         Resume playing the paused audio.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
         """
@@ -261,7 +261,7 @@ class MusicPlayer(commands.Cog):
     async def skip(self, interaction: discord.Interaction):
         """
         Skip the currently playing audio and play the next item in queue.
-        
+
         Args:
             interaction: The Discord interaction that triggered this command
         """
