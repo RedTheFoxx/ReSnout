@@ -3,10 +3,17 @@ SimpleOps is a plugin used to perform simple operations with the bot.
 Check its bio in its .toml companion file.
 """
 
+# Add to python path to use local plugin files dependencies
+import os
+import sys
+sys.path.append(os.path.dirname(__file__))
+
 import discord
 from discord import app_commands
 from discord.ext import commands
-import random
+
+from dice_parser import DiceParser
+from dice_viewer import DiceEmbed
 
 
 class SimpleOps(commands.Cog):
@@ -18,23 +25,30 @@ class SimpleOps(commands.Cog):
         latency = round(self.bot.latency * 1000)  # Convert to ms and round
         await interaction.response.send_message(f"Latence de la gateway : {latency}ms")
 
-    @app_commands.command(name="roll", description="Lancer des dés avec un nombre de faces de votre choix.")
-    @app_commands.describe(
-        dices="Nombre de dés à lancer",
-        faces="Nombre de faces des déss",
-        private="Envoyer le résultat uniquement à toi"
+    @app_commands.command(
+        name="dice", description="Lancer des dés en notation JDR (ex: 2d6+3d4+5)"
     )
-    async def roll(self, interaction: discord.Interaction, dices: int, faces: int, private: bool = False):
-        if dices <= 0 or faces <= 0:
-            await interaction.response.send_message("Le nombre de dés et de faces doit être supérieur à 0.", ephemeral=True)
-            return
+    @app_commands.describe(
+        dice_str="Notation de lancer de dés (ex: 2d6+3d4+5)",
+        private="Envoyer le résultat uniquement à toi",
+    )
+    async def dice(
+        self, interaction: discord.Interaction, dice_str: str, private: bool = False
+    ):
+        try:
+            # Parse and roll dice
+            dice_groups, modifiers = DiceParser.parse(dice_str)
+            dice_results = DiceParser.roll(dice_groups)
+            total = DiceParser.calculate_total(dice_results, modifiers)
 
-        if dices > 100 or faces > 1000:
-            await interaction.response.send_message("Vous ne pouvez lancer que 1000 dés de 100 faces maximum.", ephemeral=True)
-            return
+            # Build and send embed
+            embed = DiceEmbed.build_dice_embed(
+                dice_groups, dice_results, modifiers, total
+            )
+            await interaction.response.send_message(embed=embed, ephemeral=private)
 
-        rolls = [random.randint(1, faces) for _ in range(dices)]
-        total = sum(rolls)
-        rolls_str = " ; ".join([str(roll) for roll in rolls])
-        message = f"Je lance **{dices}d{faces}** = **{total}** ({rolls_str})"
-        await interaction.response.send_message(message, ephemeral=private)
+        except Exception as e:
+            await interaction.response.send_message(
+                f"Format de dés invalide. Utilisez la notation JDR (ex: 2d6+3d4+5)",
+                ephemeral=True,
+            )
