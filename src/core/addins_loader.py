@@ -7,12 +7,15 @@ import toml
 import importlib
 from pathlib import Path
 import inspect
+from discord.ext import commands
+from discord import app_commands
 
 
 class AddinLoader:
     def __init__(self, bot):
         self.bot = bot
         self.loaded_plugins = []
+        self.registered_commands = {}  # {command_name: plugin_name}
         self.config_path = Path(__file__).parent.parent / "plugins" / "pluginslist.toml"
 
     def _load_config(self):
@@ -25,6 +28,22 @@ class AddinLoader:
             print(f"❌ Failed to load plugin configuration: {e}")
             return None
 
+    def _get_plugin_commands(self, plugin_class):
+        """Extract all commands from a plugin class."""
+        commands = []
+        for _, member in inspect.getmembers(plugin_class):
+            if isinstance(member, app_commands.Command):
+                commands.append(member.name)
+        return commands
+
+    def _check_command_conflicts(self, plugin_name, commands):
+        """Check if any command from the plugin conflicts with existing ones."""
+        conflicts = []
+        for cmd in commands:
+            if cmd in self.registered_commands:
+                conflicts.append((cmd, self.registered_commands[cmd]))
+        return conflicts
+
     async def _load_plugin(self, plugin_name, plugin_config):
         """Load a single plugin using its configuration."""
         try:
@@ -34,9 +53,25 @@ class AddinLoader:
             # Get the plugin class
             plugin_class = getattr(module, plugin_config["class"])
 
-            # Initialize and add the plugin. A cog is a class that contains commands and events.
-            await self.bot.add_cog(plugin_class(self.bot))
+            # Check for command conflicts before loading
+            commands = self._get_plugin_commands(plugin_class)
+            conflicts = self._check_command_conflicts(plugin_name, commands)
+            
+            if conflicts:
+                conflict_msg = "\n".join([f"Command /{cmd} already registered by plugin {existing_plugin}" 
+                                        for cmd, existing_plugin in conflicts])
+                print(f"❌ Plugin {plugin_name} has command conflicts:\n{conflict_msg}")
+                
+                if plugin_config.get("required", False):
+                    raise Exception(f"Required plugin {plugin_name} has command conflicts")
+                return False
 
+            # Register commands and load the plugin
+            for cmd in commands:
+                self.registered_commands[cmd] = plugin_name
+
+            # Initialize and add the plugin
+            await self.bot.add_cog(plugin_class(self.bot))
             self.loaded_plugins.append(plugin_name)
 
             print(f"✅ Successfully loaded plugin: {plugin_name}")
