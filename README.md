@@ -32,5 +32,5 @@ ReSnout is a multi-tool bot. This is a rebirth of the original Snout, originaly 
 
 ### Simple Operations
 
-- **/roll [dice]**: Roll a dice (e.g., `/roll [nb of dice] [nb of faces]`).
+- **/dice [dice_str]**: Roll some dices using RPG notation (modifiers accepted) (e.g., `/dice 2d6+3d4+5`).
 - **/gw**: Check the Discord API response time.
