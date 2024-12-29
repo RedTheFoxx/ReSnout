@@ -36,12 +36,12 @@ class SimpleOps(commands.Cog):
         self, interaction: discord.Interaction, dice_str: str, private: bool = False
     ):
         try:
-            # Parse and roll dice
+            # Parse the dice string then roll the dice
             dice_groups, modifiers = DiceParser.parse(dice_str)
             dice_results = DiceParser.roll(dice_groups)
             total = DiceParser.calculate_total(dice_results, modifiers)
 
-            # Build and send embed
+            # Make it beautiful to display
             embed = DiceEmbed.build_dice_embed(
                 dice_groups, dice_results, modifiers, total
             )
