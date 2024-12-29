@@ -1,5 +1,5 @@
 [metadata]
-name = "Cemantix"
+name = "CemantixGame"
 description = "A Discord implementation of the Cemantix word game."
 commands = [
     "cem"

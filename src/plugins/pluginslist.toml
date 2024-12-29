@@ -30,7 +30,7 @@ path = "plugins.MusicPlayer.MP"
 class = "MusicPlayer"
 required = false
 
-[Cemantix]
-path = "plugins.Cemantix.CX"
+[CemantixGame]
+path = "plugins.CemantixGame.CX"
 class = "Cemantix"
 required = false
