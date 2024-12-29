@@ -19,10 +19,12 @@ class Cemantix(commands.Cog):
             name=f"Cemantix - {interaction.user.name}",
             type=discord.ChannelType.private_thread,
         )
-        
+
         # Add the user to the thread
         await thread.add_user(interaction.user)
-        
+
         # Send initial message
         await thread.send("Bienvenue dans votre partie de Cemantix ! (Placeholder)")
-        await interaction.response.send_message("Partie créée ! Rendez-vous dans le fil privé.", ephemeral=True) 
+        await interaction.response.send_message(
+            "Partie créée ! Rendez-vous dans le fil privé.", ephemeral=True
+        )
