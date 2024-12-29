@@ -1,0 +1,6 @@
+[metadata]
+name = "Cemantix"
+description = "A Discord implementation of the Cemantix word game."
+commands = [
+    "cem"
+] 

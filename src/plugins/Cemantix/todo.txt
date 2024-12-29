@@ -1,0 +1,33 @@
+[Logique générale du plugin Cemantix]
+- Gère un fil privé avec le joueur --> si le joueur quitte le fil, le bot supprime le fil au bout de 60 secondes.
+- Tout le jeu se déroule dans le fil privé.
+- Le bot envoie un message de bienvenue au joueur et tire un mot au hasard dans la liste des mots.
+- Le bot prévient le joueur que le mot est tiré et qu'il doit le deviner.
+--> Boucle du jeu
+- Le bot prévient le joueur que le mot est trouvé et lui donne un score = le nombre de coups joués.
+--> Le classement du joueur est montré au joueur
+- Si le joueur quitte le fil, sa partie est annulée et aucun score n'est enregistré. Le nombre de partie arrêtées prématurément est incrémenté.
+
+[Affichage du classement]
+- Graphique avec tops joueurs + leurs ELO scores
+- Positionnement du joueur dans le classement + son propre ELO score
+- Nombre total de parties jouées par le joueur, nombre de parties cumulant tous les joueurs
+- Divisions selon les ELO scores : Bronze, Argent, Or, Platine, Diamant, Etoile
+
+
+[Boucle du jeu]
+- Utilisation d'un dictionnaire pour stocker les mots à deviner, idéalement basé sur le travail du créateur de Cemantix.
+- Lecture de l'entrée du joueur
+- Utilisation de Word2Vec pour trouver la proximité cosine du mot tenté par le joueur par rapport au mot tiré.
+- Echelle de proximité de 1 à 1000% associé à un emoji
+- Incrémentation du nombre de tentative jusqu'à réussite ou abandon.
+...
+
+[Interface du jeu]
+- Le joueur entre directement un mot dans le fil privé (si plus d'un mot = invalide)
+- Le bot répond toujours dans un embed en affichant les infos nécessaires (nb tentative, score, proximité, emoji ...)
+- Trois embeds à programmer : 
+    - Bienvenue
+    - Tentative
+    - Résultat
+- Le bot doit pouvoir répondre à toutes les tentatives du joueur

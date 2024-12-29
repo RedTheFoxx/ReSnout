@@ -5,7 +5,8 @@
 enabled = [
     "SimpleOps",
     "RichNotifier",
-    "MusicPlayer"
+    "MusicPlayer",
+    "Cemantix"
 ]
 
 # ----- DECLARED PLUGINS -----
@@ -27,4 +28,9 @@ required = false
 [MusicPlayer]
 path = "plugins.MusicPlayer.MP"
 class = "MusicPlayer"
+required = false
+
+[Cemantix]
+path = "plugins.Cemantix.CX"
+class = "Cemantix"
 required = false
