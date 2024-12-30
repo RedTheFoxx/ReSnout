@@ -13,7 +13,7 @@ class GameManager:
         
         try:
             # Load word vectors
-            model_path = Path(__file__).parent / "data/frWac_non_lem_no_postag_no_phrase_500_skip_cut100.bin"
+            model_path = Path(__file__).parent / "data/frWac_no_postag_no_phrase_700_skip_cut50.bin"
             if not model_path.exists():
                 raise FileNotFoundError(f"Model file not found at {model_path}")
                 

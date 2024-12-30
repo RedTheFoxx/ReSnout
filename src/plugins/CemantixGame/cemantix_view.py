@@ -107,22 +107,28 @@ class GameView:
         return discord.Color(random.randint(0, 0xFFFFFF))
 
     def create_history_embed(self, history):
-        """Create the embed for the game history."""
+        """Create the embed for the game history, using columns."""
         embed = discord.Embed(
-            title="Historique des Mots", color=discord.Color.light_grey()
+            title="Historique", color=discord.Color.light_grey()
         )
         if not history:
             embed.description = "Aucun mot proposé pour le moment."
             return embed
 
+        words = []
+        emojis = []
+        per_milles = []
+
         for word, similarity in history:
             emoji = self._get_similarity_emoji(similarity)
             per_mille_text = f"{similarity} ‰"
             temperature = self._get_temperature(similarity)
-            embed.add_field(
-                name=word,
-                value=f"{emoji} {per_mille_text} | {temperature}°C",
-                inline=False,
-            )
+            words.append(word)
+            emojis.append(emoji)
+            per_milles.append(per_mille_text)
+
+        embed.add_field(name="Mot", value="\n".join(words), inline=True)
+        embed.add_field(name="Temp.", value="\n".join(emojis), inline=True)
+        embed.add_field(name="Similarité", value="\n".join(per_milles), inline=True)
 
         return embed
