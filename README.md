@@ -4,7 +4,7 @@
 
 ReSnout is a multi-tool bot. This is a rebirth of the original Snout, originaly built in C#, and now with a plugin oriented architecture.
 
-> **VERSION 0.1 / RELEASED 27/12/2024**
+> **VERSION 0.1**
 
 ## Features
 
@@ -25,6 +25,10 @@ ReSnout is a multi-tool bot. This is a rebirth of the original Snout, originaly 
 - **/pause**: Pause the currently playing audio.
 - **/resume**: Resume playing the paused audio.
 - **/skip**: Skip the currently playing audio and play the next item in the queue.
+
+### Cemantix Game
+
+- **/cem**: Start a new Cemantix game.
 
 ### Rich Notifier
 
