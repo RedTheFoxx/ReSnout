@@ -97,9 +97,8 @@ class AddinLoader:
             )
 
         print(
-            f"\n✨ Plugin loading complete! Loaded {len(self.loaded_plugins)} plugins:"
+            f"\n✨ Plugin loading complete! Loaded {len(self.loaded_plugins)} total plugins."
         )
-        print("\n".join(f"   • {plugin}" for plugin in self.loaded_plugins) + "\n")
 
     async def load_plugins(self):
         """Load plugins (only if called from main.py)"""
