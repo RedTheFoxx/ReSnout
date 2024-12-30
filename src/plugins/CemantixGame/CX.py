@@ -5,6 +5,7 @@ Check its bio in its .toml companion file.
 
 # TODO: Add a better valid dictionnary (maybe extract from the vector model ?) / don't touch the mystery words
 # TODO: Use a better vector model
+# TODO: Ensure auto delete of the thread and auto game cancellation after 10 minutes of inactivity
 
 # TODO: Bake the database system to store the players and their scores
 # TODO: Add a simple leaderboard (less try to find a word = the better) + all of his commands and features
