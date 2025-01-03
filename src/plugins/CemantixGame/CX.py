@@ -3,16 +3,13 @@ Cemantix is a plugin that implements the Cemantix word game through Discord.
 Check its bio in its .toml companion file.
 """
 
-# TODO: Add a better valid dictionnary (maybe extract from the vector model ?) / don't touch the mystery words
-# TODO: Use a better vector model
-# TODO: Ensure auto delete of the thread and auto game cancellation after 10 minutes of inactivity
-
 # TODO: Bake the database system to store the players and their scores
 # TODO: Add a simple leaderboard (less try to find a word = the better) + all of his commands and features
 # TODO: Prepare an ELO system with rankings like in Overwatch!
 
 import sys
 import os
+import asyncio
 
 # Add to python path to use local plugin files dependencies
 sys.path.append(os.path.dirname(__file__))
@@ -30,12 +27,30 @@ class CemantixGame(commands.Cog):
         try:
             self.game = GameManager()
             self.view = GameView()
-            self.history = []
+            self.history = {}
+            self.active_games = {} # Track active games per user
+            self.game_timers = {} # Track timers for active games
         except Exception as e:
             raise commands.ExtensionFailed("CemantixGame", e)
 
     @app_commands.command(name="cem", description="Démarrer une partie de Cemantix")
     async def cem(self, interaction: discord.Interaction):
+        user_id = interaction.user.id
+        if user_id in self.active_games:
+            # User already has an active game
+            thread_id = self.active_games[user_id]
+            thread = self.bot.get_channel(thread_id)
+            if thread:
+                await interaction.response.send_message(f"Vous avez déjà une partie en cours dans le fil {thread.mention}.", ephemeral=True)
+            else:
+                # The thread was deleted, remove from active games
+                del self.active_games[user_id]
+                await self.start_new_game(interaction)
+            return
+        else:
+            await self.start_new_game(interaction)
+
+    async def start_new_game(self, interaction: discord.Interaction):
         # Create a private thread with the user
         thread = await interaction.channel.create_thread(
             name=f"Cemantix - {interaction.user.name}",
@@ -46,8 +61,14 @@ class CemantixGame(commands.Cog):
         embed = self.view.create_initial_embed()
 
         embed_message = await thread.send(embed=embed)
-        history_embed = self.view.create_history_embed(self.history)
+        
+        # Initialize history for this thread
+        self.history[thread.id] = []
+        history_embed = self.view.create_history_embed(self.history[thread.id])
         history_message = await thread.send(embed=history_embed)
+
+        # Track the active game
+        self.active_games[interaction.user.id] = thread.id
 
         # User message event interceptor
         @self.bot.event
@@ -83,17 +104,17 @@ class CemantixGame(commands.Cog):
                     await message.delete()
 
                     # Update history
-                    if any(entry[0] == word for entry in self.history):
+                    if any(entry[0] == word for entry in self.history[thread.id]):
                         # Word already in history, do not add it again
                         pass
                     else:
-                        self.history.insert(0, (word, similarity))
-                        self.history = self.history[:20]  # Keep only the last 20 words
+                        self.history[thread.id].insert(0, (word, similarity))
+                        self.history[thread.id] = self.history[thread.id][:20]  # Keep only the last 20 words
                     
                     # Sort history by similarity (highest first)
-                    self.history.sort(key=lambda item: item[1], reverse=True)
+                    self.history[thread.id].sort(key=lambda item: item[1], reverse=True)
                     
-                    history_embed = self.view.create_history_embed(self.history)
+                    history_embed = self.view.create_history_embed(self.history[thread.id])
                     await history_message.edit(embed=history_embed)
 
                     # Check if word is correct
@@ -108,7 +129,7 @@ class CemantixGame(commands.Cog):
                         )
 
                         async def close_callback(interaction):
-                            await thread.delete()
+                            await self.close_game(thread.id, interaction.user.id)
 
                         async def new_game_callback(interaction):
                             self.game.start_new_game()
@@ -117,8 +138,8 @@ class CemantixGame(commands.Cog):
                             ]  # Get the current embed from the message
                             embed = self.view.update_embed_for_new_game(embed)
                             await embed_message.edit(embed=embed, view=None)
-                            self.history = []
-                            history_embed = self.view.create_history_embed(self.history)
+                            self.history[thread.id] = []
+                            history_embed = self.view.create_history_embed(self.history[thread.id])
                             await history_message.edit(embed=history_embed)
                             await interaction.response.defer()
 
@@ -133,9 +154,32 @@ class CemantixGame(commands.Cog):
                             await message.delete()
                         except discord.errors.NotFound:
                             pass
+                
+                # Reset timer on each message
+                if thread.id in self.game_timers:
+                    self.game_timers[thread.id].cancel()
+                self.game_timers[thread.id] = asyncio.create_task(self.close_game_timer(thread.id, interaction.user.id))
 
         # Start first game
         self.game.start_new_game()
         await interaction.response.send_message(
             "Partie créée ! Rendez-vous dans le fil privé.", ephemeral=True
         )
+        # Start timer for the game
+        self.game_timers[thread.id] = asyncio.create_task(self.close_game_timer(thread.id, interaction.user.id))
+
+    async def close_game_timer(self, thread_id, user_id):
+        await asyncio.sleep(300) # 5 minutes before auto closing the game
+        await self.close_game(thread_id, user_id)
+
+    async def close_game(self, thread_id, user_id):
+        thread = self.bot.get_channel(thread_id)
+        if thread:
+            await thread.delete()
+        if thread_id in self.history:
+            del self.history[thread_id]
+        if user_id in self.active_games:
+            del self.active_games[user_id]
+        if thread_id in self.game_timers:
+            self.game_timers[thread_id].cancel()
+            del self.game_timers[thread_id]
