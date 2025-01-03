@@ -12,7 +12,7 @@ class GameView:
         """Create the initial embed for the Cemantix game."""
         embed = discord.Embed(
             title="Cemantix",
-            description="Bienvenue dans votre partie de Cemantix !\nEntrez un mot, trouvez le mot mystère avec le moins de tentatives possibles !",
+            description="Bienvenue dans votre partie de Cemantix !\nEntrez un mot, trouvez le mot mystère avec le moins de tentatives possibles !\nNous cherchons plutôt des noms communs, le plus souvent au singulier et sans prise en charge de la casse.",
             color=self._get_random_color(),
         )
         return embed
