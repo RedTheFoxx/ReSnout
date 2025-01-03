@@ -88,7 +88,11 @@ class CemantixGame(commands.Cog):
                         pass
                     else:
                         self.history.insert(0, (word, similarity))
-                        self.history = self.history[:10]  # Keep only the last 10 words
+                        self.history = self.history[:20]  # Keep only the last 20 words
+                    
+                    # Sort history by similarity (highest first)
+                    self.history.sort(key=lambda item: item[1], reverse=True)
+                    
                     history_embed = self.view.create_history_embed(self.history)
                     await history_message.edit(embed=history_embed)
 
