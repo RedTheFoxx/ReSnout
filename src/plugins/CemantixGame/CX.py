@@ -28,7 +28,7 @@ class CemantixGame(commands.Cog):
         self.bot = bot
         try:
             self.game = GameManager()
-            self.view = GameView()
+            self.view = GameView(bot)
             self.history = {}
             self.active_games = {}
             self.game_timers = {}
@@ -227,6 +227,9 @@ class CemantixGame(commands.Cog):
                             game_data
                         )
                         
+                        # Save player data to database
+                        self.ranking_system.save_player(str(message.author.id))
+                        
                         # Update embed with ranking information
                         embed = embed_message.embeds[0]
                         embed = self.view.update_embed_for_correct_word(embed)
@@ -295,26 +298,23 @@ class CemantixGame(commands.Cog):
     )
     async def cemrank(self, interaction: discord.Interaction):
         """Display the player's rank and the leaderboard."""
-        # Ensure player exists in ranking system
         player_id = str(interaction.user.id)
-        if player_id not in self.ranking_system.players:
-            self.ranking_system.add_player(player_id)
-
-        # Get player data
-        player_rank = self.ranking_system.players[player_id]
         
-        # Create placeholder player data (to be replaced with actual data later)
-        player_data = {
-            'rank': player_rank.get_rank_display(),
-            'points': player_rank.points,
-            'global_rank': '???',  # To be implemented with database
-        }
-
+        # Get player stats
+        player_stats = self.ranking_system.get_player_stats(player_id)
+        
+        # Get nearby players
+        nearby_players = self.ranking_system.get_nearby_players(player_id, range=1)
+        
+        # Get top players
+        top_players = self.ranking_system.get_top_players(limit=3)
+        
         # Create and send the ranking embed
-        embed = self.view.create_ranking_embed(
+        embed = await self.view.create_ranking_embed(
             player_id=player_id,
-            player_data=player_data,
-            leaderboard=None  # To be implemented with database
+            player_data=player_stats,
+            nearby_players=nearby_players,
+            top_players=top_players
         )
 
         await interaction.response.send_message(embed=embed)

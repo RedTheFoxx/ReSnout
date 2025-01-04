@@ -5,9 +5,9 @@ import random
 
 
 class GameView:
-    def __init__(self):
-        pass
-
+    def __init__(self, bot):
+        self.bot = bot  # Discord bot instance needed to fetch usernames
+        
     def create_initial_embed(self):
         """Create the initial embed for the Cemantix game."""
         embed = discord.Embed(
@@ -144,14 +144,15 @@ class GameView:
         embed.set_footer(text="Merci d'avoir joué !")
         return embed
 
-    def create_ranking_embed(self, player_id: str, player_data: dict, leaderboard: list = None):
+    async def create_ranking_embed(self, player_id: str, player_data: dict, nearby_players: list = None, top_players: list = None):
         """
         Create an embed to display player ranking and leaderboard.
         
         Args:
             player_id: ID of the player requesting the rank
             player_data: Dictionary containing player's rank info
-            leaderboard: List of tuples (player_id, points) sorted by rank
+            nearby_players: List of nearby players with their ranks (rank, pid, grade, tier, points)
+            top_players: List of top players (pid, grade, tier, points)
         """
         embed = discord.Embed(
             title="🏆 Classement Cemantix",
@@ -162,46 +163,55 @@ class GameView:
         embed.add_field(
             name="📊 Votre classement",
             value=(
-                f"**Grade**: {player_data.get('rank', 'Bronze III')}\n"
-                f"**Points**: {player_data.get('points', 0)} / 100\n"
-                f"**Classement Global**: #{player_data.get('global_rank', '---')}\n"
+                f"**Grade**: {player_data['rank']}\n"
+                f"**Points**: {player_data['points']}\n"
+                f"**Classement Global**: #{player_data['global_rank']}\n"
+                f"**Parties jouées**: {player_data['games_played']}"
             ),
             inline=False
         )
 
         # Nearby players section
-        nearby_players = (
-            "```\n"
-            "  #42   | Joueur1    | Or II      | 1337 pts\n"
-            "→ #43   | Vous       | Or II      | 1336 pts\n"
-            "  #44   | Joueur3    | Or II      | 1335 pts\n"
-            "```"
-        )
-        embed.add_field(
-            name="🎯 Classement local",
-            value=nearby_players,
-            inline=False
-        )
+        if nearby_players:
+            nearby_text = "```\n"
+            for rank, pid, grade, tier, points in nearby_players:
+                prefix = "→" if pid == player_id else " "
+                try:
+                    user = await self.bot.fetch_user(int(pid))
+                    username = user.name
+                except:
+                    username = "Utilisateur inconnu"
+                nearby_text += f"{prefix} #{rank:<4} | {username:<20} | {grade} {tier} | {points} pts\n"
+            nearby_text += "```"
+            embed.add_field(
+                name="🎯 Classement local",
+                value=nearby_text,
+                inline=False
+            )
 
         # Top players section
-        top_players = (
-            "```\n"
-            "🥇 #1  | MeilleurJoueur | Maître I   | 2500 pts\n"
-            "🥈 #2  | Deuxième      | Maître II  | 2400 pts\n"
-            "🥉 #3  | Troisième     | Maître III | 2300 pts\n"
-            "```"
-        )
-        embed.add_field(
-            name="👑 Top 3",
-            value=top_players,
-            inline=False
-        )
+        if top_players:
+            top_text = "```\n"
+            for i, (pid, grade, tier, points) in enumerate(top_players, 1):
+                medal = ["🥇", "🥈", "🥉"][i-1]
+                try:
+                    user = await self.bot.fetch_user(int(pid))
+                    username = user.name
+                except:
+                    username = "Utilisateur inconnu"
+                top_text += f"{medal} #{i:<2} | {username:<20} | {grade} {tier} | {points} pts\n"
+            top_text += "```"
+            embed.add_field(
+                name="👑 Top 3",
+                value=top_text,
+                inline=False
+            )
 
         # Progress to next rank
-        progress_bar = self._create_progress_bar(player_data.get('points', 0) % 100)
+        progress_bar = self._create_progress_bar(player_data['points'] % 100)
         embed.add_field(
             name="📈 Progression vers le prochain grade",
-            value=f"{progress_bar} {player_data.get('points', 0) % 100}/100",
+            value=f"{progress_bar} {player_data['points'] % 100}/100",
             inline=False
         )
 

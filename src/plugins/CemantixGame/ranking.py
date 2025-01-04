@@ -5,6 +5,9 @@ This module implements the ranking system documented in ranking.txt
 """
 
 from enum import Enum
+import os
+import sqlite3
+from pathlib import Path
 
 class Rank(Enum):
     BRONZE = "Bronze"
@@ -117,14 +120,151 @@ class PlayerRank:
         """
         return f"{self.rank.value} {self.tier.name}"
 
-# Placeholder for future implementations
 class RankingSystem:
     def __init__(self):
         self.players = {}  # player_id: PlayerRank
+        self.db_path = Path(__file__).parent / "data/rankings.db"
+        self._init_database()
+        self._load_players()
         
+    def _init_database(self):
+        """Initialize the SQLite database and create tables if they don't exist."""
+        os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS player_rankings (
+                    discord_id TEXT PRIMARY KEY,
+                    rank TEXT,
+                    tier INTEGER,
+                    points INTEGER DEFAULT 0,
+                    games_played INTEGER DEFAULT 0,
+                    last_game_date TEXT
+                )
+            ''')
+            conn.commit()
+            
+    def _load_players(self):
+        """Load all players from database into memory."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('SELECT discord_id, rank, tier, points FROM player_rankings')
+            for discord_id, rank_str, tier, points in cursor.fetchall():
+                player = PlayerRank()
+                player.rank = Rank[rank_str]
+                player.tier = Tier(tier)
+                player.points = points
+                self.players[discord_id] = player
+                
+    def save_player(self, player_id: str):
+        """Save player's current rank data to database."""
+        player = self.players[player_id]
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                INSERT INTO player_rankings 
+                (discord_id, rank, tier, points, last_game_date)
+                VALUES (?, ?, ?, ?, DATETIME('now'))
+                ON CONFLICT(discord_id) DO UPDATE SET
+                    rank = ?,
+                    tier = ?,
+                    points = ?,
+                    games_played = games_played + 1,
+                    last_game_date = DATETIME('now')
+            ''', (
+                player_id,
+                player.rank.name, 
+                player.tier.value,
+                player.points,
+                player.rank.name,
+                player.tier.value,
+                player.points
+            ))
+            conn.commit()
+            
+    def get_player_stats(self, player_id: str) -> dict:
+        """Get complete player statistics including global rank."""
+        if player_id not in self.players:
+            self.add_player(player_id)
+            
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            
+            # Get player's rank position
+            cursor.execute('''
+                SELECT COUNT(*) + 1 FROM player_rankings 
+                WHERE points > (
+                    SELECT points FROM player_rankings WHERE discord_id = ?
+                )
+            ''', (player_id,))
+            global_rank = cursor.fetchone()[0]
+            
+            # Get games played
+            cursor.execute('''
+                SELECT games_played FROM player_rankings 
+                WHERE discord_id = ?
+            ''', (player_id,))
+            games_played = cursor.fetchone()[0] or 0
+            
+            return {
+                'rank': self.players[player_id].get_rank_display(),
+                'points': self.players[player_id].points,
+                'global_rank': global_rank,
+                'games_played': games_played
+            }
+            
+    def get_nearby_players(self, player_id: str, range: int = 1) -> list:
+        """Get players ranked near the specified player."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                WITH player_rank AS (
+                    SELECT 
+                        ROW_NUMBER() OVER (ORDER BY points DESC) as rank,
+                        discord_id,
+                        rank as grade,
+                        tier,
+                        points
+                    FROM player_rankings
+                ),
+                target_rank AS (
+                    SELECT rank 
+                    FROM player_rank 
+                    WHERE discord_id = ?
+                )
+                SELECT 
+                    rank,
+                    discord_id,
+                    grade,
+                    tier,
+                    points
+                FROM player_rank
+                WHERE rank BETWEEN (SELECT rank FROM target_rank) - ? 
+                                AND (SELECT rank FROM target_rank) + ?
+                ORDER BY rank
+            ''', (player_id, range, range))
+            return cursor.fetchall()
+            
+    def get_top_players(self, limit: int = 3) -> list:
+        """Get top ranked players."""
+        with sqlite3.connect(self.db_path) as conn:
+            cursor = conn.cursor()
+            cursor.execute('''
+                SELECT 
+                    discord_id,
+                    rank,
+                    tier,
+                    points
+                FROM player_rankings
+                ORDER BY points DESC
+                LIMIT ?
+            ''', (limit,))
+            return cursor.fetchall()
+
     def add_player(self, player_id: str):
         """Add new player to ranking system"""
         self.players[player_id] = PlayerRank()
+        self.save_player(player_id)
         
     def update_player_rank(self, player_id: str, game_data: dict):
         """
