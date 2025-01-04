@@ -20,6 +20,7 @@ from discord import app_commands
 from discord.ext import commands
 from cemantix_core import GameManager
 from cemantix_view import GameView
+from ranking import RankingSystem, PlayerRank
 
 
 class CemantixGame(commands.Cog):
@@ -33,6 +34,7 @@ class CemantixGame(commands.Cog):
             self.game_timers = {}
             self.game_start_times = {}
             self.game_attempts = {}
+            self.ranking_system = RankingSystem()
         except Exception as e:
             raise commands.ExtensionFailed("CemantixGame", e)
 
@@ -109,7 +111,7 @@ class CemantixGame(commands.Cog):
             # Delete the thread
             await thread.delete()
 
-        # Finally, clean up game data
+        # Clean up game data
         self.cleanup_game_data(thread_id)
 
     async def on_message(self, message):
@@ -208,8 +210,35 @@ class CemantixGame(commands.Cog):
 
                     # Check if word is correct
                     if word == self.game.current_mystery_word:
+                        # Calculate game stats for ranking
+                        duration = time.time() - self.game_start_times[thread_id]
+                        attempts = self.game_attempts[thread_id]
+                        
+                        # Update player ranking
+                        game_data = {
+                            'accuracy': 1.0,  # Always 1.0 when word is found
+                            'attempts': attempts,
+                            'time_taken': duration,
+                            'difficulty': 3.0  # Using median difficulty for now
+                        }
+                        
+                        points, new_rank, rank_changed = self.ranking_system.update_player_rank(
+                            str(message.author.id), 
+                            game_data
+                        )
+                        
+                        # Update embed with ranking information
                         embed = embed_message.embeds[0]
                         embed = self.view.update_embed_for_correct_word(embed)
+                        
+                        # Add ranking information to embed
+                        embed.add_field(
+                            name="Classement", 
+                            value=f"Points gagnés: {points:+d}\nRang actuel: {new_rank}"
+                            + ("\n⭐ Nouveau rang!" if rank_changed else ""),
+                            inline=False
+                        )
+
                         # Ask user if they want to close the thread or start a new game
                         view, close_button, new_game_button = (
                             self.view.create_end_game_buttons()
@@ -259,3 +288,33 @@ class CemantixGame(commands.Cog):
             del self.game_start_times[thread_id]
         if thread_id in self.game_attempts:
             del self.game_attempts[thread_id]
+
+    @app_commands.command(
+        name="cemrank",
+        description="Afficher votre classement et les meilleurs joueurs de Cemantix"
+    )
+    async def cemrank(self, interaction: discord.Interaction):
+        """Display the player's rank and the leaderboard."""
+        # Ensure player exists in ranking system
+        player_id = str(interaction.user.id)
+        if player_id not in self.ranking_system.players:
+            self.ranking_system.add_player(player_id)
+
+        # Get player data
+        player_rank = self.ranking_system.players[player_id]
+        
+        # Create placeholder player data (to be replaced with actual data later)
+        player_data = {
+            'rank': player_rank.get_rank_display(),
+            'points': player_rank.points,
+            'global_rank': '???',  # To be implemented with database
+        }
+
+        # Create and send the ranking embed
+        embed = self.view.create_ranking_embed(
+            player_id=player_id,
+            player_data=player_data,
+            leaderboard=None  # To be implemented with database
+        )
+
+        await interaction.response.send_message(embed=embed)
