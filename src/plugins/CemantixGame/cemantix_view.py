@@ -143,3 +143,82 @@ class GameView:
         embed.add_field(name="Temps total", value=duration, inline=True)
         embed.set_footer(text="Merci d'avoir joué !")
         return embed
+
+    def create_ranking_embed(self, player_id: str, player_data: dict, leaderboard: list = None):
+        """
+        Create an embed to display player ranking and leaderboard.
+        
+        Args:
+            player_id: ID of the player requesting the rank
+            player_data: Dictionary containing player's rank info
+            leaderboard: List of tuples (player_id, points) sorted by rank
+        """
+        embed = discord.Embed(
+            title="🏆 Classement Cemantix",
+            color=self._get_random_color()
+        )
+
+        # Player's current rank section
+        embed.add_field(
+            name="📊 Votre classement",
+            value=(
+                f"**Grade**: {player_data.get('rank', 'Bronze III')}\n"
+                f"**Points**: {player_data.get('points', 0)} / 100\n"
+                f"**Classement Global**: #{player_data.get('global_rank', '---')}\n"
+            ),
+            inline=False
+        )
+
+        # Nearby players section
+        nearby_players = (
+            "```\n"
+            "  #42   | Joueur1    | Or II      | 1337 pts\n"
+            "→ #43   | Vous       | Or II      | 1336 pts\n"
+            "  #44   | Joueur3    | Or II      | 1335 pts\n"
+            "```"
+        )
+        embed.add_field(
+            name="🎯 Classement local",
+            value=nearby_players,
+            inline=False
+        )
+
+        # Top players section
+        top_players = (
+            "```\n"
+            "🥇 #1  | MeilleurJoueur | Maître I   | 2500 pts\n"
+            "🥈 #2  | Deuxième      | Maître II  | 2400 pts\n"
+            "🥉 #3  | Troisième     | Maître III | 2300 pts\n"
+            "```"
+        )
+        embed.add_field(
+            name="👑 Top 3",
+            value=top_players,
+            inline=False
+        )
+
+        # Progress to next rank
+        progress_bar = self._create_progress_bar(player_data.get('points', 0) % 100)
+        embed.add_field(
+            name="📈 Progression vers le prochain grade",
+            value=f"{progress_bar} {player_data.get('points', 0) % 100}/100",
+            inline=False
+        )
+
+        embed.set_footer(text="Continuez à jouer pour améliorer votre classement !")
+        return embed
+
+    def _create_progress_bar(self, value: int, max_value: int = 100, length: int = 10) -> str:
+        """
+        Create a text-based progress bar.
+        
+        Args:
+            value: Current value
+            max_value: Maximum value
+            length: Length of the progress bar
+        
+        Returns:
+            str: A text-based progress bar
+        """
+        filled = int((value / max_value) * length)
+        return f"[{'█' * filled}{'░' * (length - filled)}]"
