@@ -1,0 +1,39 @@
+Cemantix Game Ranking System Documentation
+==========================================
+
+Ranking Structure:
+------------------
+The ranking system will have 5 main ranks, each divided into 3 tiers:
+
+1. Bronze (I, II, III)
+2. Silver (I, II, III) 
+3. Gold (I, II, III)
+4. Platinum (I, II, III)
+5. Master (I, II, III)
+
+Ranking Progression:
+--------------------
+- Players start at Bronze III
+- Progress is based on a modified ELO system
+- Points are gained/lost based on:
+  * Accuracy of guesses
+  * Number of attempts
+  * Time taken to solve
+  * Difficulty of words
+
+Ranking Points:
+---------------
+- Each rank requires 100 points to progress
+- Tiers within a rank require:
+  * Tier III: 0-33 points
+  * Tier II: 34-66 points
+  * Tier I: 67-99 points
+
+Placeholder for Future Implementation:
+--------------------------------------
+[IMPLEMENTATION DETAILS]
+- Player ranking storage
+- ELO calculation algorithm
+- Rank progression tracking
+- Visual rank indicators
+- Rank rewards system
