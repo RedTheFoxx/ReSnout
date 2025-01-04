@@ -132,3 +132,14 @@ class GameView:
         embed.add_field(name="Similarité", value="\n".join(per_milles), inline=True)
 
         return embed
+    
+    def create_summary_embed(self, attempts, duration):
+        """Create the embed for the game summary."""
+        embed = discord.Embed(
+            title="Résumé de la partie",
+            color=self._get_random_color(),
+        )
+        embed.add_field(name="Tentatives", value=str(attempts), inline=True)
+        embed.add_field(name="Temps total", value=duration, inline=True)
+        embed.set_footer(text="Merci d'avoir joué !")
+        return embed

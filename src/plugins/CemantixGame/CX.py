@@ -10,6 +10,7 @@ Check its bio in its .toml companion file.
 import sys
 import os
 import asyncio
+import time
 
 # Add to python path to use local plugin files dependencies
 sys.path.append(os.path.dirname(__file__))
@@ -30,6 +31,8 @@ class CemantixGame(commands.Cog):
             self.history = {}
             self.active_games = {} # Track active games per user
             self.game_timers = {} # Track timers for active games
+            self.game_start_times = {} # Track start times for active games
+            self.game_attempts = {} # Track attempts for active games
         except Exception as e:
             raise commands.ExtensionFailed("CemantixGame", e)
 
@@ -69,6 +72,8 @@ class CemantixGame(commands.Cog):
 
         # Track the active game
         self.active_games[interaction.user.id] = thread.id
+        self.game_start_times[thread.id] = time.time()
+        self.game_attempts[thread.id] = 0
 
         # User message event interceptor
         @self.bot.event
@@ -116,6 +121,9 @@ class CemantixGame(commands.Cog):
                     
                     history_embed = self.view.create_history_embed(self.history[thread.id])
                     await history_message.edit(embed=history_embed)
+
+                    # Increment attempts
+                    self.game_attempts[thread.id] += 1
 
                     # Check if word is correct
                     if word == self.game.current_mystery_word:
@@ -175,7 +183,32 @@ class CemantixGame(commands.Cog):
     async def close_game(self, thread_id, user_id):
         thread = self.bot.get_channel(thread_id)
         if thread:
+            # Calculate game duration
+            start_time = self.game_start_times.get(thread_id)
+            if start_time:
+                end_time = time.time()
+                duration = end_time - start_time
+                minutes = int(duration // 60)
+                seconds = int(duration % 60)
+                duration_str = f"{minutes} minutes et {seconds} secondes"
+            else:
+                duration_str = "Temps inconnu"
+
+            # Get the number of attempts
+            attempts = self.game_attempts.get(thread_id, 0)
+
+            # Get the parent channel (where /cem was invoked)
+            parent_channel = thread.parent
+
+            # Create and send the summary embed to the parent channel
+            if parent_channel:
+                summary_embed = self.view.create_summary_embed(attempts, duration_str)
+                await parent_channel.send(embed=summary_embed)
+
+            # Delete the thread
             await thread.delete()
+
+        # Clean up game data
         if thread_id in self.history:
             del self.history[thread_id]
         if user_id in self.active_games:
@@ -183,3 +216,7 @@ class CemantixGame(commands.Cog):
         if thread_id in self.game_timers:
             self.game_timers[thread_id].cancel()
             del self.game_timers[thread_id]
+        if thread_id in self.game_start_times:
+            del self.game_start_times[thread_id]
+        if thread_id in self.game_attempts:
+            del self.game_attempts[thread_id]
