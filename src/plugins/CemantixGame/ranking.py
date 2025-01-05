@@ -55,6 +55,34 @@ class PlayerRank:
             (Rank.MASTER, Tier.II): 1300,
             (Rank.MASTER, Tier.I): 1400,
         }
+        
+        self.shadow_mmr = 0.5 # Initialize shadow MMR
+
+    def calculate_performance_score(self, accuracy: float, attempts: int, time_taken: float, difficulty: float) -> float:
+        """
+        Calculate a performance score based on game data.
+        
+        Args:
+            accuracy: Percentage of correct guesses (0.0 - 1.0)
+            attempts: Number of attempts made
+            time_taken: Time taken to solve in seconds
+            difficulty: Word difficulty rating (1-5)
+            
+        Returns:
+            float: Performance score
+        """
+        # Normalize inputs
+        normalized_attempts = min(1.0 / max(attempts, 1), 1.0)
+        normalized_time = min(1.0 / max(time_taken, 1), 1.0)
+        normalized_difficulty = (difficulty - 1) / 4  # Convert 1-5 to 0-1 range
+        
+        # Calculate performance score S
+        S = (accuracy * self._w1 + 
+             normalized_attempts * self._w2 +
+             normalized_time * self._w3 +
+             normalized_difficulty * self._w4)
+        
+        return S
 
     def calculate_elo(self, accuracy: float, attempts: int, time_taken: float, difficulty: float) -> int:
         """
@@ -69,19 +97,11 @@ class PlayerRank:
         Returns:
             int: Points to add/subtract from current score
         """
-        # Normalize inputs
-        normalized_attempts = min(1.0 / max(attempts, 1), 1.0)
-        normalized_time = min(1.0 / max(time_taken, 1), 1.0)
-        normalized_difficulty = (difficulty - 1) / 4  # Convert 1-5 to 0-1 range
         
-        # Calculate performance score S
-        S = (accuracy * self._w1 + 
-             normalized_attempts * self._w2 +
-             normalized_time * self._w3 +
-             normalized_difficulty * self._w4)
+        S = self.calculate_performance_score(accuracy, attempts, time_taken, difficulty)
         
-        # Calculate ELO change
-        delta_elo = self._K * (S - self._S_mean)
+        # Calculate ELO change based on performance relative to shadow MMR
+        delta_elo = self._K * (S - self.shadow_mmr)
         
         return round(delta_elo)
 
@@ -139,7 +159,8 @@ class RankingSystem:
                     tier INTEGER,
                     points INTEGER DEFAULT 0,
                     games_played INTEGER DEFAULT 0,
-                    last_game_date TEXT
+                    last_game_date TEXT,
+                    shadow_mmr REAL DEFAULT 0.5
                 )
             ''')
             conn.commit()
@@ -148,12 +169,13 @@ class RankingSystem:
         """Load all players from database into memory."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('SELECT discord_id, rank, tier, points FROM player_rankings')
-            for discord_id, rank_str, tier, points in cursor.fetchall():
+            cursor.execute('SELECT discord_id, rank, tier, points, shadow_mmr FROM player_rankings')
+            for discord_id, rank_str, tier, points, shadow_mmr in cursor.fetchall():
                 player = PlayerRank()
                 player.rank = Rank[rank_str]
                 player.tier = Tier(tier)
                 player.points = points
+                player.shadow_mmr = shadow_mmr
                 self.players[discord_id] = player
                 
     def save_player(self, player_id: str):
@@ -163,22 +185,25 @@ class RankingSystem:
             cursor = conn.cursor()
             cursor.execute('''
                 INSERT INTO player_rankings 
-                (discord_id, rank, tier, points, last_game_date)
-                VALUES (?, ?, ?, ?, DATETIME('now'))
+                (discord_id, rank, tier, points, last_game_date, shadow_mmr)
+                VALUES (?, ?, ?, ?, DATETIME('now'), ?)
                 ON CONFLICT(discord_id) DO UPDATE SET
                     rank = ?,
                     tier = ?,
                     points = ?,
                     games_played = games_played + 1,
-                    last_game_date = DATETIME('now')
+                    last_game_date = DATETIME('now'),
+                    shadow_mmr = ?
             ''', (
                 player_id,
                 player.rank.name, 
                 player.tier.value,
                 player.points,
+                player.shadow_mmr,
                 player.rank.name,
                 player.tier.value,
-                player.points
+                player.points,
+                player.shadow_mmr
             ))
             conn.commit()
             
@@ -210,7 +235,8 @@ class RankingSystem:
                 'rank': self.players[player_id].get_rank_display(),
                 'points': self.players[player_id].points,
                 'global_rank': global_rank,
-                'games_played': games_played
+                'games_played': games_played,
+                'shadow_mmr': self.players[player_id].shadow_mmr
             }
             
     def get_nearby_players(self, player_id: str, range: int = 1) -> list:
@@ -289,6 +315,16 @@ class RankingSystem:
             game_data['time_taken'],
             game_data['difficulty']
         )
+        
+        # Update shadow MMR
+        performance_score = player.calculate_performance_score(
+            game_data['accuracy'],
+            game_data['attempts'],
+            game_data['time_taken'],
+            game_data['difficulty']
+        )
+        
+        player.shadow_mmr = (player.shadow_mmr * 0.95) + (performance_score * 0.05) # Moving average
         
         # Update rank and check if it changed
         rank_changed = player.update_rank(points)
