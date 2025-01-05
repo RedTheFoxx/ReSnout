@@ -29,6 +29,60 @@ ReSnout is a multi-tool bot. This is a rebirth of the original Snout, originaly 
 ### Cemantix Game
 
 - **/cem**: Start a new Cemantix game.
+- **/cemrank**: Display your Cemantix ranking and the leaderboard.
+
+#### Cemantix Game Ranking System
+
+The Cemantix game uses a custom ranking system to track player progress.
+
+##### Ranks and Tiers
+
+Players are ranked using a combination of **Ranks** and **Tiers**. The ranks are:
+
+- Bronze
+- Silver
+- Gold
+- Platinum
+- Master
+
+Each rank is further divided into three tiers:
+
+- I (highest)
+- II
+- III (lowest)
+
+For example, a player might be "Gold II".
+
+##### Points
+
+Players earn points based on their performance in each game. These points determine their rank and tier. The points are calculated using a modified ELO system.
+
+##### Performance Score
+
+A performance score (S) is calculated based on the following factors:
+
+- **Attempts**: The number of tries it took to find the word. Fewer attempts result in a higher score.
+- **Time**: The time taken to find the word. Less time results in a higher score.
+- **Accuracy**: Always 1.0 when the word is found.
+- **Difficulty**: Currently a fixed value.
+
+The formula for the performance score is:
+
+$S = (0.9 * \frac{1}{attempts}) + (0.9 * \frac{1}{time})$
+
+*Note: The accuracy and difficulty weights are currently unused.*
+
+##### ELO Calculation
+
+The ELO system is used to adjust the player's points after each game. The change in ELO points (delta_elo) is calculated as follows:
+
+$delta\_elo = K * (S - MMR)$
+
+Where:
+
+- $K$ is a constant (currently 20) that determines the impact of each game on the ELO score.
+- $S$ is the player's performance score.
+- $MMR$ is a hidden rating that represents the player's average performance.
 
 ### Rich Notifier
 
