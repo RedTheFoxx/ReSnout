@@ -12,7 +12,7 @@ class GameView:
         """Create the initial embed for the Cemantix game."""
         embed = discord.Embed(
             title="Cemantix",
-            description="Bienvenue dans votre partie de Cemantix !\nEntrez un mot, trouvez le mot mystère avec le moins de tentatives possibles !\nNous cherchons plutôt des noms communs, le plus souvent au singulier et sans prise en charge de la casse.",
+            description="Bienvenue dans votre partie de Cemantix !\nEntrez un mot, trouvez le mot mystère avec le moins de tentatives possibles !\nNous cherchons plutôt des noms communs, le plus souvent au singulier et sans prise en charge de la casse.\nAttention, le temps ainsi que le nombre de coups sont comptés dans le calcul de vos performances ! C'est partit !",
             color=self._get_random_color(),
         )
         return embed
@@ -69,15 +69,19 @@ class GameView:
         elif similarity >= 990:
             return "🔥"  # Very hot
         elif similarity >= 950:
-            return "😅"  # Hot
+            return "🔥"  # Hot
         elif similarity >= 900:
-            return "😅"  # Warm
+            return "🔥"  # Warm
         elif similarity >= 800:
-            return "😊"  # Getting warmer
+            return "🔥"  # Getting warmer
         elif similarity >= 600:
-            return "🙂"  # Lukewarm
+            return "🔥"  # Lukewarm
+        elif similarity >= 500:
+            return "🔥"  # Getting cooler
         elif similarity >= 400:
-            return "😐"  # Cool
+            return "😊"  # Cool
+        elif similarity >= 250:
+            return "😊" 
         elif similarity >= 200:
             return "😐"  # Cold
         elif similarity >= 100:
@@ -210,7 +214,7 @@ class GameView:
         # Progress to next rank
         progress_bar = self._create_progress_bar(player_data['points'] % 100)
         embed.add_field(
-            name="📈 Progression vers le prochain grade",
+            name="📈 Progression vers le prochain rang",
             value=f"{progress_bar} {player_data['points'] % 100}/100",
             inline=False
         )
