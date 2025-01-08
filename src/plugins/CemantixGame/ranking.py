@@ -27,15 +27,21 @@ class PlayerRank:
         self.tier = Tier.III
         self.points = 0
         
-        # Performance weights - adjusted for attempts and time only
+        # Performance weights - attempts are most important
         self._w1 = 0.0  # accuracy weight (unused)
-        self._w2 = 0.9  # attempts weight (increased)
-        self._w3 = 0.9  # time weight (increased)
+        self._w2 = 2.0  # attempts weight (highest weight for Cemantix)
+        self._w3 = 0.5  # time weight (less important)
         self._w4 = 0.0  # difficulty weight (unused)
         
         # ELO constants
-        self._K = 20  # ELO adjustment factor
-        self._S_mean = 0.5  # Expected average performance
+        self._K = 50  # Higher adjustment factor for more dramatic changes
+        self._S_mean = 0.3  # Lower expected performance for Cemantix
+        
+        # Performance thresholds
+        self._penalty_threshold = 0.2  # Performance score below this triggers penalty
+        self._penalty_multiplier = 1.5  # Multiplier for poor performance penalties
+        self._bonus_threshold = 0.8  # Performance score above this triggers bonus
+        self._bonus_multiplier = 2.0  # Multiplier for exceptional performance
         
         # Rank thresholds
         self._rank_thresholds = {
@@ -56,7 +62,7 @@ class PlayerRank:
             (Rank.MASTER, Tier.I): 1400,
         }
         
-        self.shadow_mmr = 0.5 # Initialize shadow MMR
+        self.shadow_mmr = 0.3 # Initialize shadow MMR (lower for Cemantix's difficulty)
 
     def calculate_performance_score(self, accuracy: float, attempts: int, time_taken: float, difficulty: float) -> float:
         """
@@ -71,9 +77,14 @@ class PlayerRank:
         Returns:
             float: Performance score
         """
-        # Normalize inputs
-        normalized_attempts = min(1.0 / max(attempts, 1), 1.0)
-        normalized_time = min(1.0 / max(time_taken, 1), 1.0)
+        # Normalize attempts with special bonus for low attempts
+        if attempts <= 5:  # Exceptional performance
+            normalized_attempts = 1.0
+        else:
+            normalized_attempts = max(0.1, min(0.8, 20.0 / max(attempts, 1)))
+            
+        # Normalize time with less aggressive penalty
+        normalized_time = min(1.0, 3600.0 / max(time_taken, 1))
         normalized_difficulty = (difficulty - 1) / 4  # Convert 1-5 to 0-1 range
         
         # Calculate performance score S
@@ -82,7 +93,7 @@ class PlayerRank:
              normalized_time * self._w3 +
              normalized_difficulty * self._w4)
         
-        return S
+        return max(0.0, min(1.0, S))  # Clamp between 0 and 1
 
     def calculate_elo(self, accuracy: float, attempts: int, time_taken: float, difficulty: float) -> int:
         """
@@ -100,8 +111,18 @@ class PlayerRank:
         
         S = self.calculate_performance_score(accuracy, attempts, time_taken, difficulty)
         
-        # Calculate ELO change based on performance relative to shadow MMR
+        # Calculate base ELO change based on performance relative to shadow MMR
         delta_elo = self._K * (S - self.shadow_mmr)
+        
+        # Apply multipliers based on performance
+        if S < self._penalty_threshold:
+            delta_elo *= self._penalty_multiplier
+        elif S > self._bonus_threshold:
+            delta_elo *= self._bonus_multiplier
+            
+        # Additional bonus for exceptional attempts (≤ 5)
+        if attempts <= 5:
+            delta_elo *= 2.5  # Significant bonus for extremely rare performance
         
         return round(delta_elo)
 
@@ -112,7 +133,8 @@ class PlayerRank:
         Args:
             points: Points to add to current score
         """
-        self.points += points
+        # Empêcher les points de descendre en dessous de 0 (Bronze III)
+        self.points = max(0, self.points + points)
         
         # Find the appropriate rank and tier based on total points
         current_rank = self.rank
@@ -127,6 +149,11 @@ class PlayerRank:
                 self.rank = rank
                 self.tier = tier
                 break
+        
+        # S'assurer que le rang minimum est Bronze III
+        if self.points == 0:
+            self.rank = Rank.BRONZE
+            self.tier = Tier.III
                 
         # Return True if rank changed
         return (current_rank, current_tier) != (self.rank, self.tier)

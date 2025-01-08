@@ -1,0 +1,66 @@
+Cemantix Game Ranking System Documentation
+
+Rank Tiers:
+- Bronze (III, II, I)
+- Silver (III, II, I)
+- Gold (III, II, I)
+- Platinum (III, II, I)
+- Master (III, II, I)
+
+Rank Thresholds:
+- Bronze III: 0 points
+- Bronze II: 100 points
+- Bronze I: 200 points
+- Silver III: 300 points
+- Silver II: 400 points
+- Silver I: 500 points
+- Gold III: 600 points
+- Gold II: 700 points
+- Gold I: 800 points
+- Platinum III: 900 points
+- Platinum II: 1000 points
+- Platinum I: 1100 points
+- Master III: 1200 points
+- Master II: 1300 points
+- Master I: 1400 points
+
+Performance Score Calculation:
+Performance score (S) is calculated based on:
+- Attempts (weight: 2.0): Highest weight for Cemantix's focus on guess efficiency
+- Time taken (weight: 0.5): Less emphasis on solve speed
+Accuracy and difficulty weights are currently unused (0.0)
+
+Normalization Process:
+- Attempts:
+  * If attempts ≤ 5: 1.0 (exceptional performance bonus)
+  * Otherwise: max(0.1, min(0.8, 20.0 / attempts))
+- Time: min(1.0, 3600.0 / max(time_taken, 1))
+- Final score is clamped between 0.0 and 1.0
+
+Bonus/Penalty System:
+- Penalty threshold: 0.2 (performance scores below this trigger penalty)
+- Penalty multiplier: 1.5x (poor performances lose 50% more points)
+- Bonus threshold: 0.8 (performance scores above this trigger bonus)
+- Bonus multiplier: 2.0x (exceptional performances gain double points)
+- Special attempts bonus: 2.5x multiplier for ≤5 attempts
+
+ELO System:
+- K factor: 50 (high factor for dramatic rank changes)
+- Expected average performance (S_mean): 0.3 (lower due to Cemantix's difficulty)
+- Shadow MMR: Moving average of performance scores (95% previous MMR + 5% new performance)
+- ELO change formula: K * (S - shadow_MMR) * [penalty_multiplier or bonus_multiplier]
+
+Rank Update Process:
+1. Calculate performance score based on attempts and time
+2. Calculate ELO change based on performance vs shadow MMR
+3. Apply penalty or bonus multiplier based on performance thresholds
+4. Apply special bonus multiplier for exceptional attempts (≤5)
+5. Update shadow MMR using moving average
+6. Check if rank has changed based on new points
+7. Return points earned, new rank display, and rank changed status
+
+Database Operations:
+- Save player rank data to SQLite database
+- Retrieve player rankings
+- Get top players
+- Add new players to ranking system
