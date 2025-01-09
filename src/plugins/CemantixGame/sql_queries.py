@@ -1,3 +1,12 @@
+# Query to create the main rankings table
+# Fields:
+# - discord_id: Player's Discord ID (primary key)
+# - rank: Player's rank title
+# - tier: Numerical tier within rank
+# - points: Total points earned
+# - games_played: Number of games completed
+# - last_game_date: Timestamp of most recent game
+# - shadow_mmr: Hidden matchmaking rating (0.0-1.0)
 CREATE_RANKINGS_TABLE = '''
     CREATE TABLE IF NOT EXISTS player_rankings (
         discord_id TEXT PRIMARY KEY,
@@ -10,11 +19,18 @@ CREATE_RANKINGS_TABLE = '''
     )
 '''
 
+# Retrieves basic ranking data for all players
+# Returns: List of (discord_id, rank, tier, points, shadow_mmr)
 GET_PLAYERS = '''
     SELECT discord_id, rank, tier, points, shadow_mmr 
     FROM player_rankings
 '''
 
+# Saves or updates a player's ranking data
+# Parameters:
+# 1-5: discord_id, rank, tier, points, shadow_mmr (for INSERT)
+# 6-9: rank, tier, points, shadow_mmr (for UPDATE)
+# Note: Automatically increments games_played and updates last_game_date
 SAVE_PLAYER = '''
     INSERT INTO player_rankings
     (discord_id, rank, tier, points, last_game_date, shadow_mmr)
@@ -28,6 +44,10 @@ SAVE_PLAYER = '''
         shadow_mmr = ?
 '''
 
+# Gets a player's position in the global rankings
+# Parameters:
+# 1: discord_id
+# Returns: Player's position (1-based ranking)
 GET_PLAYER_RANK = '''
     SELECT COUNT(*) + 1 FROM player_rankings
     WHERE points > (
@@ -35,6 +55,12 @@ GET_PLAYER_RANK = '''
     )
 '''
 
+# Retrieves players ranked near a target player
+# Parameters:
+# 1: discord_id - Target player's Discord ID
+# 2: Range before target rank
+# 3: Range after target rank
+# Returns: List of (rank, discord_id, grade, tier, points) for nearby players
 GET_NEARBY_PLAYERS = '''
     WITH player_rank AS (
         SELECT
@@ -62,6 +88,10 @@ GET_NEARBY_PLAYERS = '''
     ORDER BY rank
 '''
 
+# Retrieves the top N players by points
+# Parameters:
+# 1: limit - Number of top players to return
+# Returns: List of (discord_id, rank, tier, points) for top players
 GET_TOP_PLAYERS = '''
     SELECT
         discord_id,
