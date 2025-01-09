@@ -48,18 +48,18 @@ class PlayerRank:
             (Rank.BRONZE, Tier.III): 0,
             (Rank.BRONZE, Tier.II): 100,
             (Rank.BRONZE, Tier.I): 200,
-            (Rank.SILVER, Tier.III): 300,
-            (Rank.SILVER, Tier.II): 400,
-            (Rank.SILVER, Tier.I): 500,
-            (Rank.GOLD, Tier.III): 600,
-            (Rank.GOLD, Tier.II): 700,
-            (Rank.GOLD, Tier.I): 800,
-            (Rank.PLATINUM, Tier.III): 900,
-            (Rank.PLATINUM, Tier.II): 1000,
-            (Rank.PLATINUM, Tier.I): 1100,
-            (Rank.MASTER, Tier.III): 1200,
-            (Rank.MASTER, Tier.II): 1300,
-            (Rank.MASTER, Tier.I): 1400,
+            (Rank.SILVER, Tier.III): 350,
+            (Rank.SILVER, Tier.II): 525,
+            (Rank.SILVER, Tier.I): 750,
+            (Rank.GOLD, Tier.III): 1000,
+            (Rank.GOLD, Tier.II): 1300,
+            (Rank.GOLD, Tier.I): 1600,
+            (Rank.PLATINUM, Tier.III): 2000,
+            (Rank.PLATINUM, Tier.II): 2500,
+            (Rank.PLATINUM, Tier.I): 3000,
+            (Rank.MASTER, Tier.III): 3600,
+            (Rank.MASTER, Tier.II): 4300,
+            (Rank.MASTER, Tier.I): 5100,
         }
         
         self.shadow_mmr = 0.3 # Initialize shadow MMR (lower for Cemantix's difficulty)
@@ -154,7 +154,7 @@ class PlayerRank:
         if self.points == 0:
             self.rank = Rank.BRONZE
             self.tier = Tier.III
-                
+        
         # Return True if rank changed
         return (current_rank, current_tier) != (self.rank, self.tier)
 
@@ -179,7 +179,7 @@ class RankingSystem:
         os.makedirs(os.path.dirname(self.db_path), exist_ok=True)
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(''' 
                 CREATE TABLE IF NOT EXISTS player_rankings (
                     discord_id TEXT PRIMARY KEY,
                     rank TEXT,
@@ -210,7 +210,7 @@ class RankingSystem:
         player = self.players[player_id]
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(''' 
                 INSERT INTO player_rankings 
                 (discord_id, rank, tier, points, last_game_date, shadow_mmr)
                 VALUES (?, ?, ?, ?, DATETIME('now'), ?)
@@ -243,7 +243,7 @@ class RankingSystem:
             cursor = conn.cursor()
             
             # Get player's rank position
-            cursor.execute('''
+            cursor.execute(''' 
                 SELECT COUNT(*) + 1 FROM player_rankings 
                 WHERE points > (
                     SELECT points FROM player_rankings WHERE discord_id = ?
@@ -252,7 +252,7 @@ class RankingSystem:
             global_rank = cursor.fetchone()[0]
             
             # Get games played
-            cursor.execute('''
+            cursor.execute(''' 
                 SELECT games_played FROM player_rankings 
                 WHERE discord_id = ?
             ''', (player_id,))
@@ -270,7 +270,7 @@ class RankingSystem:
         """Get players ranked near the specified player."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(''' 
                 WITH player_rank AS (
                     SELECT 
                         ROW_NUMBER() OVER (ORDER BY points DESC) as rank,
@@ -302,7 +302,7 @@ class RankingSystem:
         """Get top ranked players."""
         with sqlite3.connect(self.db_path) as conn:
             cursor = conn.cursor()
-            cursor.execute('''
+            cursor.execute(''' 
                 SELECT 
                     discord_id,
                     rank,

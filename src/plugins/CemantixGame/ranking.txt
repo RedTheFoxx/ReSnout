@@ -11,18 +11,18 @@ Rank Thresholds:
 - Bronze III: 0 points
 - Bronze II: 100 points
 - Bronze I: 200 points
-- Silver III: 300 points
-- Silver II: 400 points
-- Silver I: 500 points
-- Gold III: 600 points
-- Gold II: 700 points
-- Gold I: 800 points
-- Platinum III: 900 points
-- Platinum II: 1000 points
-- Platinum I: 1100 points
-- Master III: 1200 points
-- Master II: 1300 points
-- Master I: 1400 points
+- Silver III: 350 points
+- Silver II: 525 points
+- Silver I: 750 points
+- Gold III: 1000 points
+- Gold II: 1300 points
+- Gold I: 1600 points
+- Platinum III: 2000 points
+- Platinum II: 2500 points
+- Platinum I: 3000 points
+- Master III: 3600 points
+- Master II: 4300 points
+- Master I: 5100 points
 
 Performance Score Calculation:
 Performance score (S) is calculated based on:
