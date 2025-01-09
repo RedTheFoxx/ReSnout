@@ -1,4 +1,4 @@
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from enum import Enum
 from typing import Dict, Tuple
 
@@ -13,6 +13,25 @@ class Tier(Enum):
     I = 1
     II = 2
     III = 3
+
+def _default_rank_thresholds() -> Dict[Tuple[Rank, Tier], int]:
+    return {
+        (Rank.BRONZE, Tier.III): 0,
+        (Rank.BRONZE, Tier.II): 100,
+        (Rank.BRONZE, Tier.I): 200,
+        (Rank.SILVER, Tier.III): 350,
+        (Rank.SILVER, Tier.II): 525,
+        (Rank.SILVER, Tier.I): 750,
+        (Rank.GOLD, Tier.III): 1000,
+        (Rank.GOLD, Tier.II): 1300,
+        (Rank.GOLD, Tier.I): 1600,
+        (Rank.PLATINUM, Tier.III): 2000,
+        (Rank.PLATINUM, Tier.II): 2500,
+        (Rank.PLATINUM, Tier.I): 3000,
+        (Rank.MASTER, Tier.III): 3600,
+        (Rank.MASTER, Tier.II): 4300,
+        (Rank.MASTER, Tier.I): 5100,
+    }
 
 @dataclass
 class RankingConfig:
@@ -33,20 +52,4 @@ class RankingConfig:
     BONUS_MULTIPLIER: float = 2.0
     
     # Rank thresholds
-    RANK_THRESHOLDS: Dict[Tuple[Rank, Tier], int] = {
-        (Rank.BRONZE, Tier.III): 0,
-        (Rank.BRONZE, Tier.II): 100,
-        (Rank.BRONZE, Tier.I): 200,
-        (Rank.SILVER, Tier.III): 350,
-        (Rank.SILVER, Tier.II): 525,
-        (Rank.SILVER, Tier.I): 750,
-        (Rank.GOLD, Tier.III): 1000,
-        (Rank.GOLD, Tier.II): 1300,
-        (Rank.GOLD, Tier.I): 1600,
-        (Rank.PLATINUM, Tier.III): 2000,
-        (Rank.PLATINUM, Tier.II): 2500,
-        (Rank.PLATINUM, Tier.I): 3000,
-        (Rank.MASTER, Tier.III): 3600,
-        (Rank.MASTER, Tier.II): 4300,
-        (Rank.MASTER, Tier.I): 5100,
-    } 
+    RANK_THRESHOLDS = _default_rank_thresholds() 

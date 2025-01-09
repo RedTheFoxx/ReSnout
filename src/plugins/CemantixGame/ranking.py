@@ -4,21 +4,9 @@ Cemantix Game Ranking System Implementation
 This module implements the ranking system documented in ranking.txt
 """
 
-from enum import Enum
 from pathlib import Path
 from ranking_db import RankingDatabase
-
-class Rank(Enum):
-    BRONZE = "Bronze"
-    SILVER = "Silver"
-    GOLD = "Gold"
-    PLATINUM = "Platinum"
-    MASTER = "Master"
-
-class Tier(Enum):
-    I = 1
-    II = 2
-    III = 3
+from ranking_config import Rank, Tier, RankingConfig
 
 class PlayerRank:
     def __init__(self):
@@ -27,41 +15,22 @@ class PlayerRank:
         self.points = 0
         
         # Performance weights - attempts are most important
-        self._w1 = 0.0  # accuracy weight (unused)
-        self._w2 = 2.0  # attempts weight (highest weight for Cemantix)
-        self._w3 = 0.5  # time weight (less important)
-        self._w4 = 0.0  # difficulty weight (unused)
+        self._w1 = RankingConfig.ACCURACY_WEIGHT
+        self._w2 = RankingConfig.ATTEMPTS_WEIGHT
+        self._w3 = RankingConfig.TIME_WEIGHT
+        self._w4 = RankingConfig.DIFFICULTY_WEIGHT
         
         # ELO constants
-        self._K = 50  # Higher adjustment factor for more dramatic changes
-        self._S_mean = 0.3  # Lower expected performance for Cemantix
+        self._K = RankingConfig.K_FACTOR
+        self._S_mean = RankingConfig.EXPECTED_PERFORMANCE
         
         # Performance thresholds
-        self._penalty_threshold = 0.2  # Performance score below this triggers penalty
-        self._penalty_multiplier = 1.5  # Multiplier for poor performance penalties
-        self._bonus_threshold = 0.8  # Performance score above this triggers bonus
-        self._bonus_multiplier = 2.0  # Multiplier for exceptional performance
+        self._penalty_threshold = RankingConfig.PENALTY_THRESHOLD
+        self._penalty_multiplier = RankingConfig.PENALTY_MULTIPLIER
+        self._bonus_threshold = RankingConfig.BONUS_THRESHOLD
+        self._bonus_multiplier = RankingConfig.BONUS_MULTIPLIER
         
-        # Rank thresholds
-        self._rank_thresholds = {
-            (Rank.BRONZE, Tier.III): 0,
-            (Rank.BRONZE, Tier.II): 100,
-            (Rank.BRONZE, Tier.I): 200,
-            (Rank.SILVER, Tier.III): 350,
-            (Rank.SILVER, Tier.II): 525,
-            (Rank.SILVER, Tier.I): 750,
-            (Rank.GOLD, Tier.III): 1000,
-            (Rank.GOLD, Tier.II): 1300,
-            (Rank.GOLD, Tier.I): 1600,
-            (Rank.PLATINUM, Tier.III): 2000,
-            (Rank.PLATINUM, Tier.II): 2500,
-            (Rank.PLATINUM, Tier.I): 3000,
-            (Rank.MASTER, Tier.III): 3600,
-            (Rank.MASTER, Tier.II): 4300,
-            (Rank.MASTER, Tier.I): 5100,
-        }
-        
-        self.shadow_mmr = 0.3 # Initialize shadow MMR (lower for Cemantix's difficulty)
+        self.shadow_mmr = RankingConfig.EXPECTED_PERFORMANCE  # Initialize shadow MMR
 
     def calculate_performance_score(self, accuracy: float, attempts: int, time_taken: float, difficulty: float) -> float:
         """
@@ -140,7 +109,7 @@ class PlayerRank:
         current_tier = self.tier
         
         for (rank, tier), threshold in sorted(
-            self._rank_thresholds.items(),
+            RankingConfig.RANK_THRESHOLDS.items(),
             key=lambda x: x[1],
             reverse=True
         ):
