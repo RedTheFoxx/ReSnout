@@ -63,8 +63,18 @@ class CemantixGame(commands.Cog):
         embed = self.view.create_initial_embed()
         history_embed = self.view.create_history_embed(self.history[thread.id])
 
+        # Create close button view
+        view, close_button = self.view.create_close_button()
+
+        async def close_callback(interaction):
+            await interaction.response.send_message("Partie terminée ! Le canal sera supprimé dans 5 secondes...")
+            await asyncio.sleep(5)
+            await self.close_game(thread.id, interaction.user.id)
+
+        close_button.callback = close_callback
+
         # Send initial messages
-        embed_message = await thread.send(embed=embed)
+        embed_message = await thread.send(embed=embed, view=view)
         history_message = await thread.send(embed=history_embed)
 
         # Start first game
@@ -103,10 +113,14 @@ class CemantixGame(commands.Cog):
             # Get the parent channel (where /cem was invoked)
             parent_channel = thread.parent
 
-            # Create and send the summary embed to the parent channel
+            # Try to send the summary embed to the parent channel
             if parent_channel:
-                summary_embed = self.view.create_summary_embed(attempts, duration_str)
-                await parent_channel.send(embed=summary_embed)
+                try:
+                    summary_embed = self.view.create_summary_embed(attempts, duration_str)
+                    await parent_channel.send(embed=summary_embed)
+                except discord.errors.Forbidden:
+                    # Ignore permission errors - the bot can't send messages in the parent channel
+                    pass
 
             # Delete the thread
             await thread.delete()

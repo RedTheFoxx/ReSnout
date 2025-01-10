@@ -17,6 +17,17 @@ class GameView:
         )
         return embed
 
+    def create_close_button(self):
+        """Create a view with a close button for the initial embed."""
+        view = discord.ui.View()
+        close_button = discord.ui.Button(
+            label="Quitter la partie", 
+            style=discord.ButtonStyle.red,
+            custom_id="close_game"
+        )
+        view.add_item(close_button)
+        return view, close_button
+
     def update_embed_for_invalid_word(self, embed, word):
         """Update the embed when an invalid word is entered."""
         embed.description = f"Le mot '{word}' m'est inconnu ... 🤷"
