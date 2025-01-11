@@ -15,6 +15,7 @@ class GameView:
             description="Bienvenue dans votre partie de Cemantix !\nEntrez un mot, trouvez le mot mystère avec le moins de tentatives possibles !\nNous cherchons plutôt des noms communs, le plus souvent au singulier et sans prise en charge de la casse.\nAttention, le temps ainsi que le nombre de coups sont comptés dans le calcul de vos performances ! C'est partit !",
             color=self._get_random_color(),
         )
+        embed.add_field(name="Tentatives", value="0", inline=True)
         return embed
 
     def create_close_button(self):
@@ -39,12 +40,20 @@ class GameView:
         per_mille_text = f"{similarity} ‰"
         temperature = self._get_temperature(similarity)
 
+        # Get current attempt count from embed fields if it exists
+        attempts = 0
+        for field in embed.fields:
+            if field.name == "Tentatives":
+                attempts = int(field.value) + 1
+                break
+
         embed.clear_fields()
         embed.description = f"Vous proposez : **'{word}'**"
         embed.add_field(
             name="Similarité", value=f"{emoji} **{per_mille_text}**", inline=True
         )
         embed.add_field(name="Température", value=f"**{temperature}°C**", inline=True)
+        embed.add_field(name="Tentatives", value=str(attempts), inline=True)
         embed.set_footer(text="Continuez à chercher !")
         return embed
 
