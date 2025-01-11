@@ -1,2 +1,7 @@
 discord.py
+python-dotenv
 toml
+yt-dlp
+gensim
+pathlib
+SQLAlchemy
