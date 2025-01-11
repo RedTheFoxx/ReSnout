@@ -4,7 +4,7 @@
 
 ReSnout is a multi-tool bot. This is a rebirth of the original Snout, originaly built in C#, and now with a plugin oriented architecture.
 
-> **VERSION 0.1**
+> **VERSION 1.0**
 
 ## Features
 
