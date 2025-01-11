@@ -33,6 +33,18 @@ def _default_rank_thresholds() -> Dict[Tuple[Rank, Tier], int]:
         (Rank.MASTER, Tier.I): 5100,
     }
 
+class RankEmoji:
+    BRONZE = "🟤"
+    SILVER = "⚪"
+    GOLD = "🟡"
+    PLATINUM = "💠"
+    MASTER = "⚜"
+
+    @staticmethod
+    def get_emoji(rank: Rank) -> str:
+        """Get the emoji for a given rank."""
+        return getattr(RankEmoji, rank.name)
+
 @dataclass
 class RankingConfig:
     # Performance weights

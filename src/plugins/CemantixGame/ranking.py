@@ -6,7 +6,7 @@ This module implements the ranking system documented in ranking.txt
 
 from pathlib import Path
 from ranking_db import RankingDatabase
-from ranking_config import Rank, Tier, RankingConfig
+from ranking_config import Rank, Tier, RankingConfig, RankEmoji
 
 class PlayerRank:
     def __init__(self):
@@ -131,9 +131,9 @@ class PlayerRank:
         Get formatted rank display string
         
         Returns:
-            str: Formatted rank (e.g. "Gold II")
+            str: Formatted rank with emoji (e.g. "🟡 Gold II")
         """
-        return f"{self.rank.value} {self.tier.name}"
+        return f"{RankEmoji.get_emoji(self.rank)} {self.rank.value} {self.tier.name}"
 
 class RankingSystem:
     def __init__(self):
