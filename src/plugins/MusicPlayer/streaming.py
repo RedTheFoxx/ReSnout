@@ -34,13 +34,18 @@ class YTDLSource(discord.PCMVolumeTransformer):
         Returns:
             A new YTDLSource instance configured for the given URL
         """
-        ydl_opts = {"format": "bestaudio/best", "noplaylist": True}
+        ffmpeg_path = "/usr/bin/ffmpeg"  # Path to ffmpeg
+        ydl_opts = {
+            "format": "bestaudio/best",
+            "noplaylist": True,
+            "ffmpeg_location": ffmpeg_path
+        }
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
             data = ydl.extract_info(url, download=not stream)
             if "entries" in data:
                 data = data["entries"][0]
             filename = data["url"] if stream else ydl.prepare_filename(data)
-            return cls(discord.FFmpegPCMAudio(filename), data=data)
+            return cls(discord.FFmpegPCMAudio(filename, executable=ffmpeg_path), data=data)
 
 
 class AudioManager:
