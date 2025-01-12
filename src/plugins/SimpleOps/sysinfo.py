@@ -16,18 +16,6 @@ def is_raspberry_pi() -> bool:
     except:
         return False
 
-def get_cpu_info() -> str:
-    """Read CPU information from /proc/cpuinfo"""
-    try:
-        with open('/proc/cpuinfo', 'r') as f:
-            cpu_info = []
-            for line in f:
-                if any(field in line for field in ['model name', 'Hardware', 'processor', 'cpu MHz', 'bogomips']):
-                    cpu_info.append(line.strip())
-        return '\n'.join(cpu_info)
-    except Exception as e:
-        return f"Error reading CPU info: {str(e)}"
-
 def get_memory_info() -> str:
     """Read memory information from /proc/meminfo"""
     try:
@@ -83,7 +71,6 @@ def get_system_info() -> dict:
         dict: A dictionary containing system information.
     """
     return {
-        "CPU Information": get_cpu_info(),
         "Memory Usage": get_memory_info(),
         "Disk Usage": get_disk_info()
     }
@@ -96,15 +83,12 @@ def create_system_embeds(system_info: dict) -> list[discord.Embed]:
         system_info (dict): Dictionary containing system information
         
     Returns:
-        list[discord.Embed]: List of embeds for CPU, Memory and Disk information
+        list[discord.Embed]: List of embeds for Memory and Disk information
     """
-    cpu_embed = discord.Embed(title="CPU Information", color=discord.Color.blue())
-    cpu_embed.description = f"```\n{system_info['CPU Information']}\n```"
-    
     memory_embed = discord.Embed(title="Memory Usage", color=discord.Color.green())
     memory_embed.description = f"```\n{system_info['Memory Usage']}\n```"
     
     disk_embed = discord.Embed(title="Disk Usage", color=discord.Color.gold())
     disk_embed.description = f"```\n{system_info['Disk Usage']}\n```"
     
-    return [cpu_embed, memory_embed, disk_embed] 
+    return [memory_embed, disk_embed] 
