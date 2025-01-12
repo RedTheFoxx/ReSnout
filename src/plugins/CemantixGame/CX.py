@@ -34,6 +34,7 @@ class CemantixGame(commands.Cog):
             self.game_timers = {}
             self.game_start_times = {}
             self.game_attempts = {}
+            self.game_modes = {}  # Store if game is ranked or not
             self.ranking_system = RankingSystem()
         except Exception as e:
             raise commands.ExtensionFailed("CemantixGame", e)
@@ -43,9 +44,24 @@ class CemantixGame(commands.Cog):
 
     @app_commands.command(name="cem", description="Démarrer une partie de Cemantix")
     async def cem(self, interaction: discord.Interaction):
-        await self.start_new_game(interaction)
+        # Create initial embed for game mode selection
+        embed = self.view.create_game_mode_embed()
+        
+        # Create mode selection buttons
+        view, ranked_button, unranked_button = self.view.create_game_mode_buttons()
+        
+        async def ranked_callback(interaction):
+            await self.start_new_game(interaction, ranked=True)
+            
+        async def unranked_callback(interaction):
+            await self.start_new_game(interaction, ranked=False)
+            
+        ranked_button.callback = ranked_callback
+        unranked_button.callback = unranked_callback
+        
+        await interaction.response.send_message(embed=embed, view=view, ephemeral=True)
 
-    async def start_new_game(self, interaction: discord.Interaction):
+    async def start_new_game(self, interaction: discord.Interaction, ranked: bool = True):
         # Create a private thread with the user
         thread = await interaction.channel.create_thread(
             name=f"Cemantix - {interaction.user.name} #{len([t for t in self.active_games.values() if t.startswith(str(interaction.user.id))]) + 1}",
@@ -58,9 +74,15 @@ class CemantixGame(commands.Cog):
         self.active_games[thread.id] = str(interaction.user.id)
         self.game_start_times[thread.id] = time.time()
         self.game_attempts[thread.id] = 0
+        self.game_modes[thread.id] = ranked  # Store game mode
 
         # Create initial embeds
         embed = self.view.create_initial_embed()
+        if ranked:
+            embed.add_field(name="Mode", value="🏆 Partie classée", inline=True)
+        else:
+            embed.add_field(name="Mode", value="🎲 Partie non classée", inline=True)
+            
         history_embed = self.view.create_history_embed(self.history[thread.id])
 
         # Create close button view
@@ -84,10 +106,11 @@ class CemantixGame(commands.Cog):
             ephemeral=True,
         )
 
-        # Start timer for the game
-        self.game_timers[thread.id] = asyncio.create_task(
-            self.close_game_timer(thread.id, interaction.user.id)
-        )
+        # Start timer for the game only if it's a ranked game
+        if ranked:
+            self.game_timers[thread.id] = asyncio.create_task(
+                self.close_game_timer(thread.id, interaction.user.id)
+            )
 
     async def close_game_timer(self, thread_id, user_id):
         await asyncio.sleep(300)  # 5 minutes before auto closing the game
@@ -228,33 +251,38 @@ class CemantixGame(commands.Cog):
                         duration = time.time() - self.game_start_times[thread_id]
                         attempts = self.game_attempts[thread_id]
                         
-                        # Update player ranking
-                        game_data = {
-                            'accuracy': 1.0,  # Always 1.0 when word is found
-                            'attempts': attempts,
-                            'time_taken': duration,
-                            'difficulty': 3.0  # Using median difficulty for now
-                        }
-                        
-                        points, new_rank, rank_changed = self.ranking_system.update_player_rank(
-                            str(message.author.id), 
-                            game_data
-                        )
-                        
-                        # Save player data to database
-                        self.ranking_system.save_player(str(message.author.id))
-                        
-                        # Update embed with ranking information
-                        embed = embed_message.embeds[0]
-                        embed = self.view.update_embed_for_correct_word(embed)
-                        
-                        # Add ranking information to embed
-                        embed.add_field(
-                            name="Classement", 
-                            value=f"Points gagnés: {points:+d}\nRang actuel: {new_rank}"
-                            + ("\n⭐ Nouveau rang!" if rank_changed else ""),
-                            inline=False
-                        )
+                        # Update player ranking only if game is ranked
+                        if self.game_modes[thread_id]:
+                            game_data = {
+                                'accuracy': 1.0,  # Always 1.0 when word is found
+                                'attempts': attempts,
+                                'time_taken': duration,
+                                'difficulty': 3.0  # Using median difficulty for now
+                            }
+                            
+                            points, new_rank, rank_changed = self.ranking_system.update_player_rank(
+                                str(message.author.id), 
+                                game_data
+                            )
+                            
+                            # Save player data to database
+                            self.ranking_system.save_player(str(message.author.id))
+                            
+                            # Update embed with ranking information
+                            embed = embed_message.embeds[0]
+                            embed = self.view.update_embed_for_correct_word(embed)
+                            
+                            # Add ranking information to embed only for ranked games
+                            embed.add_field(
+                                name="Classement", 
+                                value=f"Points gagnés: {points:+d}\nRang actuel: {new_rank}"
+                                + ("\n⭐ Nouveau rang!" if rank_changed else ""),
+                                inline=False
+                            )
+                        else:
+                            # Update embed without ranking information for unranked games
+                            embed = embed_message.embeds[0]
+                            embed = self.view.update_embed_for_correct_word(embed)
 
                         # Ask user if they want to close the thread or start a new game
                         view, close_button, new_game_button = (
@@ -265,15 +293,52 @@ class CemantixGame(commands.Cog):
                             await self.close_game(thread_id, message.author.id)
 
                         async def new_game_callback(interaction):
-                            self.game.start_new_game()
-                            embed = embed_message.embeds[0]
-                            embed = self.view.update_embed_for_new_game(embed)
-                            await embed_message.edit(embed=embed, view=None)
-                            self.history[thread_id] = []
-                            history_embed = self.view.create_history_embed(
-                                self.history[thread_id]
-                            )
-                            await history_message.edit(embed=history_embed)
+                            # Create initial embed for game mode selection
+                            embed = self.view.create_game_mode_embed()
+                            
+                            # Create mode selection buttons
+                            view, ranked_button, unranked_button = self.view.create_game_mode_buttons()
+                            
+                            async def ranked_callback(interaction):
+                                self.game.start_new_game()
+                                embed = embed_message.embeds[0]
+                                embed = self.view.update_embed_for_new_game(embed)
+                                embed.add_field(name="Mode", value="🏆 Partie classée", inline=True)
+                                await embed_message.edit(embed=embed, view=None)
+                                self.history[thread_id] = []
+                                self.game_modes[thread_id] = True
+                                history_embed = self.view.create_history_embed(self.history[thread_id])
+                                await history_message.edit(embed=history_embed)
+                                
+                                # Start timer for ranked game
+                                if thread_id in self.game_timers:
+                                    self.game_timers[thread_id].cancel()
+                                self.game_timers[thread_id] = asyncio.create_task(
+                                    self.close_game_timer(thread_id, message.author.id)
+                                )
+                                await interaction.response.defer()
+                                
+                            async def unranked_callback(interaction):
+                                self.game.start_new_game()
+                                embed = embed_message.embeds[0]
+                                embed = self.view.update_embed_for_new_game(embed)
+                                embed.add_field(name="Mode", value="🎲 Partie non classée", inline=True)
+                                await embed_message.edit(embed=embed, view=None)
+                                self.history[thread_id] = []
+                                self.game_modes[thread_id] = False
+                                history_embed = self.view.create_history_embed(self.history[thread_id])
+                                await history_message.edit(embed=history_embed)
+                                
+                                # Remove timer for unranked game
+                                if thread_id in self.game_timers:
+                                    self.game_timers[thread_id].cancel()
+                                    del self.game_timers[thread_id]
+                                await interaction.response.defer()
+                            
+                            ranked_button.callback = ranked_callback
+                            unranked_button.callback = unranked_callback
+                            
+                            await embed_message.edit(embed=embed, view=view)
                             await interaction.response.defer()
 
                         close_button.callback = close_callback
@@ -285,12 +350,12 @@ class CemantixGame(commands.Cog):
                         except discord.errors.NotFound:
                             pass
 
-                # Reset timer on each message
-                if thread_id in self.game_timers:
+                # Reset timer on each message only if game is ranked
+                if thread_id in self.game_timers and self.game_modes[thread_id]:
                     self.game_timers[thread_id].cancel()
-                self.game_timers[thread_id] = asyncio.create_task(
-                    self.close_game_timer(thread_id, message.author.id)
-                )
+                    self.game_timers[thread_id] = asyncio.create_task(
+                        self.close_game_timer(thread_id, message.author.id)
+                    )
 
     def cleanup_game_data(self, thread_id):
         """Cleans up game data for a given thread_id."""
@@ -305,6 +370,8 @@ class CemantixGame(commands.Cog):
             del self.game_start_times[thread_id]
         if thread_id in self.game_attempts:
             del self.game_attempts[thread_id]
+        if thread_id in self.game_modes:
+            del self.game_modes[thread_id]
 
     @app_commands.command(
         name="cemrank",

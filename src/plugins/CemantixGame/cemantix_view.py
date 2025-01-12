@@ -29,6 +29,31 @@ class GameView:
         view.add_item(close_button)
         return view, close_button
 
+    def create_game_mode_buttons(self):
+        """Create a view with buttons to select game mode (ranked or unranked)."""
+        view = discord.ui.View()
+        ranked_button = discord.ui.Button(
+            label="Partie classée", 
+            style=discord.ButtonStyle.primary,
+            custom_id="ranked_game"
+        )
+        unranked_button = discord.ui.Button(
+            label="Partie non classée", 
+            style=discord.ButtonStyle.secondary,
+            custom_id="unranked_game"
+        )
+        view.add_item(ranked_button)
+        view.add_item(unranked_button)
+        return view, ranked_button, unranked_button
+
+    def create_game_mode_embed(self):
+        """Create the embed for game mode selection."""
+        return discord.Embed(
+            title="Cemantix - Sélection du mode",
+            description="Choisissez votre mode de jeu :\n\n🏆 **Partie classée**\n- Votre score ELO évoluera\n- Le thread expirera après 5 minutes d'inactivité\n\n🎲 **Partie non classée**\n- Pas d'évolution de votre score ELO\n- Le thread n'expire pas automatiquement",
+            color=self._get_random_color()
+        )
+
     def update_embed_for_invalid_word(self, embed, word):
         """Update the embed when an invalid word is entered."""
         embed.description = f"Le mot '{word}' m'est inconnu ... 🤷"
