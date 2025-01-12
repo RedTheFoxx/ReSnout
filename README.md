@@ -23,10 +23,11 @@ ReSnout is a multi-tool bot, a rebirth of the original Snout, originally built i
 
 ### Cemantix Game
 
-| Command            | Description                                        |
-| ------------------ | -------------------------------------------------- |
-| **/cem**     | Start a new Cemantix game.                         |
-| **/cemrank** | Display your Cemantix ranking and the leaderboard. |
+| Command            | Description                                                   |
+| ------------------ | ------------------------------------------------------------- |
+| **/cem**     | Start a new Cemantix game.                                    |
+| **/cemrank** | Display your Cemantix ranking and the leaderboard.            |
+| **/cemquit**      | Abort the current Cemantix game (useful if a button is buggy) |
 
 #### Cemantix Game Ranking System
 
