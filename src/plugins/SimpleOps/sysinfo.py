@@ -1,6 +1,7 @@
 import subprocess
 import platform
 import discord
+import os
 
 def is_raspberry_pi() -> bool:
     """
@@ -15,41 +16,77 @@ def is_raspberry_pi() -> bool:
     except:
         return False
 
-def generate_system_info_commands() -> list:
-    """
-    Generate a list of shell commands to gather system information.
-    
-    Returns:
-        list: A list of shell commands.
-    """
-    return ["lscpu", "free -h", "df -h"]
-
-def run_system_info_commands() -> dict:
-    """
-    Execute the system information commands and gather the output.
-    
-    Returns:
-        dict: A dictionary containing the output of each command.
-    """
-    commands = generate_system_info_commands()
-    info_dict = {}
-    
+def get_cpu_info() -> str:
+    """Read CPU information from /proc/cpuinfo"""
     try:
-        # Run each command separately
-        for i, cmd in enumerate(commands):
-            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
-            if i == 0:
-                info_dict["CPU Information"] = result.stdout
-            elif i == 1:
-                info_dict["Memory Usage"] = result.stdout
-            elif i == 2:
-                info_dict["Disk Usage"] = result.stdout
-        
-        return info_dict
+        with open('/proc/cpuinfo', 'r') as f:
+            cpu_info = []
+            for line in f:
+                if any(field in line for field in ['model name', 'Hardware', 'processor', 'cpu MHz', 'bogomips']):
+                    cpu_info.append(line.strip())
+        return '\n'.join(cpu_info)
+    except Exception as e:
+        return f"Error reading CPU info: {str(e)}"
+
+def get_memory_info() -> str:
+    """Read memory information from /proc/meminfo"""
+    try:
+        with open('/proc/meminfo', 'r') as f:
+            mem_info = []
+            for line in f:
+                if any(field in line for field in ['MemTotal', 'MemFree', 'MemAvailable', 'SwapTotal', 'SwapFree']):
+                    # Convert KB to GB
+                    parts = line.split()
+                    if len(parts) >= 2:
+                        name = parts[0].rstrip(':')
+                        value = int(parts[1])
+                        gb_value = value / 1024 / 1024  # Convert KB to GB
+                        mem_info.append(f"{name}: {gb_value:.2f} GB")
+        return '\n'.join(mem_info)
+    except Exception as e:
+        return f"Error reading memory info: {str(e)}"
+
+def get_disk_info() -> str:
+    """Read disk information from /proc/mounts and statvfs"""
+    try:
+        disk_info = []
+        with open('/proc/mounts', 'r') as f:
+            for line in f:
+                parts = line.split()
+                if len(parts) >= 2 and parts[1] == '/':  # Only show root filesystem
+                    device = parts[0]
+                    mountpoint = parts[1]
+                    try:
+                        stats = os.statvfs(mountpoint)
+                        total = (stats.f_blocks * stats.f_frsize) / (1024**3)  # Convert to GB
+                        free = (stats.f_bfree * stats.f_frsize) / (1024**3)
+                        used = total - free
+                        disk_info.extend([
+                            f"Device: {device}",
+                            f"Mount: {mountpoint}",
+                            f"Total: {total:.2f} GB",
+                            f"Used: {used:.2f} GB",
+                            f"Free: {free:.2f} GB",
+                            f"Use%: {(used/total*100):.1f}%"
+                        ])
+                    except Exception as e:
+                        disk_info.append(f"Error getting stats for {mountpoint}: {str(e)}")
+        return '\n'.join(disk_info)
+    except Exception as e:
+        return f"Error reading disk info: {str(e)}"
+
+def get_system_info() -> dict:
+    """
+    Gather system information by reading system files.
     
-    except subprocess.CalledProcessError as e:
-        print(f"An error occurred while executing the commands: {e}")
-        return {"Error": str(e)}
+    Returns:
+        dict: A dictionary containing system information.
+    """
+    return {
+        "CPU Information": get_cpu_info(),
+        "Memory Usage": get_memory_info(),
+        "Disk Usage": get_disk_info()
+    }
 
 def create_system_embeds(system_info: dict) -> list[discord.Embed]:
     """

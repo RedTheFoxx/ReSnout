@@ -14,7 +14,7 @@ from discord.ext import commands
 
 from dice_parser import DiceParser
 from dice_viewer import DiceEmbed
-from sysinfo import run_system_info_commands, create_system_embeds, is_raspberry_pi
+from sysinfo import get_system_info, create_system_embeds, is_raspberry_pi
 
 
 class SimpleOps(commands.Cog):
@@ -64,7 +64,7 @@ class SimpleOps(commands.Cog):
             return
             
         try:
-            system_info = run_system_info_commands()
+            system_info = get_system_info()
             embeds = create_system_embeds(system_info)
             
             await interaction.response.send_message(embeds=embeds)
