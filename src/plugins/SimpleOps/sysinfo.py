@@ -15,19 +15,14 @@ def is_raspberry_pi() -> bool:
     except:
         return False
 
-def generate_system_info_commands() -> str:
+def generate_system_info_commands() -> list:
     """
-    Generate a string containing shell commands to gather system information.
+    Generate a list of shell commands to gather system information.
     
     Returns:
-        str: A string of shell commands.
+        list: A list of shell commands.
     """
-    commands = [
-        "lscpu",
-        "free -h",
-        "df -h"
-    ]
-    return "; ".join(commands)
+    return ["lscpu", "free -h", "df -h"]
 
 def run_system_info_commands() -> dict:
     """
@@ -37,18 +32,18 @@ def run_system_info_commands() -> dict:
         dict: A dictionary containing the output of each command.
     """
     commands = generate_system_info_commands()
+    info_dict = {}
+    
     try:
-        # Run the commands and capture the output
-        result = subprocess.run(commands, shell=True, check=True, text=True, capture_output=True)
-        
-        # Split the output into parts corresponding to each command
-        outputs = result.stdout.strip().split('\n\n')
-        
-        # Define keys for each command output
-        keys = ["CPU Information", "Memory Usage", "Disk Usage"]
-        
-        # Create a dictionary with keys and corresponding outputs
-        info_dict = {keys[i]: outputs[i] for i in range(len(keys))}
+        # Run each command separately
+        for i, cmd in enumerate(commands):
+            result = subprocess.run(cmd.split(), capture_output=True, text=True, check=True)
+            if i == 0:
+                info_dict["CPU Information"] = result.stdout
+            elif i == 1:
+                info_dict["Memory Usage"] = result.stdout
+            elif i == 2:
+                info_dict["Disk Usage"] = result.stdout
         
         return info_dict
     
