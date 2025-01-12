@@ -14,6 +14,7 @@ from discord.ext import commands
 
 from dice_parser import DiceParser
 from dice_viewer import DiceEmbed
+from sysinfo import run_system_info_commands, create_system_embeds, is_raspberry_pi
 
 
 class SimpleOps(commands.Cog):
@@ -51,4 +52,25 @@ class SimpleOps(commands.Cog):
             await interaction.response.send_message(
                 f"Format de dés invalide. Utilisez la notation JDR (ex: 2d6+3d4+5)",
                 ephemeral=True,
+            )
+
+    @app_commands.command(name="sys", description="Afficher les informations système du bot.")
+    async def sys(self, interaction: discord.Interaction):
+        if not is_raspberry_pi():
+            await interaction.response.send_message(
+                "Cette commande n'est disponible que lorsque le bot fonctionne sur un Raspberry Pi.",
+                ephemeral=True
+            )
+            return
+            
+        try:
+            system_info = run_system_info_commands()
+            embeds = create_system_embeds(system_info)
+            
+            await interaction.response.send_message(embeds=embeds)
+            
+        except Exception as e:
+            await interaction.response.send_message(
+                f"Une erreur est survenue lors de la récupération des informations système: {str(e)}",
+                ephemeral=True
             )
