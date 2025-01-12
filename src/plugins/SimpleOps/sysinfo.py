@@ -37,7 +37,7 @@ def run_system_info_commands() -> dict:
     try:
         # Run each command separately
         for i, cmd in enumerate(commands):
-            result = subprocess.run(cmd.split(), capture_output=True, text=True, check=True)
+            result = subprocess.run(cmd, shell=True, capture_output=True, text=True, check=True)
             if i == 0:
                 info_dict["CPU Information"] = result.stdout
             elif i == 1:
