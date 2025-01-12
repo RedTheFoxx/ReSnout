@@ -67,7 +67,7 @@ class CemantixGame(commands.Cog):
         view, close_button = self.view.create_close_button()
 
         async def close_callback(interaction):
-            await interaction.response.send_message("Partie terminée ! Le canal sera supprimé dans 5 secondes...")
+            await interaction.response.send_message(f"Partie abandonnée ! Le mot mystère était : **{self.game.current_mystery_word}**\nLe canal sera supprimé dans 5 secondes...")
             await asyncio.sleep(5)
             await self.close_game(thread.id, interaction.user.id)
 
@@ -332,3 +332,31 @@ class CemantixGame(commands.Cog):
         )
 
         await interaction.response.send_message(embed=embed)
+
+    @app_commands.command(
+        name="cemquit",
+        description="Abandonner la partie de Cemantix en cours"
+    )
+    async def cemquit(self, interaction: discord.Interaction):
+        """Quit the current Cemantix game."""
+        # Check if the user has an active game
+        thread_id = None
+        for tid, user_id in self.active_games.items():
+            if user_id == str(interaction.user.id):
+                thread_id = tid
+                break
+
+        if thread_id is None:
+            await interaction.response.send_message("Vous n'avez pas de partie en cours.", ephemeral=True)
+            return
+
+        # Get the thread
+        thread = self.bot.get_channel(thread_id)
+        if thread is None:
+            await interaction.response.send_message("Impossible de trouver votre partie.", ephemeral=True)
+            return
+
+        # Send abandon message and close the game
+        await interaction.response.send_message(f"Partie abandonnée ! Le mot mystère était : **{self.game.current_mystery_word}**\nLe canal sera supprimé dans 5 secondes...")
+        await asyncio.sleep(5)
+        await self.close_game(thread_id, interaction.user.id)

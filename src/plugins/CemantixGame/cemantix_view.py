@@ -22,7 +22,7 @@ class GameView:
         """Create a view with a close button for the initial embed."""
         view = discord.ui.View()
         close_button = discord.ui.Button(
-            label="Quitter la partie", 
+            label="Abandonner", 
             style=discord.ButtonStyle.red,
             custom_id="close_game"
         )
