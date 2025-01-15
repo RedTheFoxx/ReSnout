@@ -26,17 +26,19 @@ __IN-HOUSE MASTER PLUGINS LIST (by Red) :__
 """
 
 import os
+from dotenv import load_dotenv
 import discord
 from discord.ext import commands
 from core.addins_loader import AddinLoader
+
+load_dotenv()
+BOT_TOKEN = os.getenv("BOT_TOKEN")
 
 # ReSnout is an omniscient bot, but it is not an admin
 intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 intents.presences = True
-
-BOT_TOKEN = os.getenv("ENV_BOT_TOKEN")
 
 bot = commands.Bot(command_prefix="/", intents=intents)
 plugin_loader = AddinLoader(bot)
