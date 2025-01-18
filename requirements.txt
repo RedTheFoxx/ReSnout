@@ -6,3 +6,5 @@ yt-dlp
 gensim
 pathlib
 SQLAlchemy
+scrapy
+selenium
