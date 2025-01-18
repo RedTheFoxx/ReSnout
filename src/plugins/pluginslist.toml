@@ -6,7 +6,8 @@ enabled = [
     "SimpleOps",
     "RichNotifier",
     "MusicPlayer",
-    "CemantixGame"
+    "CemantixGame",
+    "MarvelStats"
 ]
 
 # ----- DECLARED PLUGINS -----
@@ -33,4 +34,9 @@ required = false
 [CemantixGame]
 path = "plugins.CemantixGame.CX"
 class = "CemantixGame"
+required = false
+
+[MarvelStats]
+path = "plugins.MarvelStats.MS"
+class = "Marvel"
 required = false

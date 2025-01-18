@@ -1,0 +1,6 @@
+[metadata]
+name = "MarvelStats"
+description = "A plugin to get Marvel Rivals stats straight from a website."
+commands = [
+    "stats"
+] 
