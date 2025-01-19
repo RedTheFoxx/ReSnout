@@ -19,16 +19,15 @@ class MarvelStats(commands.Cog):
     def __init__(self, bot):
         self.bot = bot
         try:
-            # Initialize any necessary components here
+            # Things to initialize
             pass
         except Exception as e:
             raise commands.ExtensionFailed("MarvelStats", e)
 
     @app_commands.command(name="stats", description="Afficher les statistiques d'un joueur Marvel Rivals")
-    @app_commands.describe(username="Le pseudo du joueur Marvel Rivals")
+    @app_commands.describe(username="Le pseudo Marvel Rivals du joueur")
     async def marvelstats(self, interaction: discord.Interaction, username: str):
         """
         Fetch and display Marvel Rivals statistics for a given username.
         """
         await interaction.response.send_message(f"Recherche des stats pour {username}...")
-        # TODO: Implement the logic to fetch and display the stats here
