@@ -64,6 +64,7 @@ def get_player_macro_stats(url) -> dict:
         driver.quit()
 
 
-# Example usage
-url = "https://tracker.gg/marvel-rivals/profile/ign/AsukaM/overview"
-print(get_player_macro_stats(url))
+if __name__ == "__main__":
+    # Example usage
+    url = "https://tracker.gg/marvel-rivals/profile/ign/AsukaM/overview"
+    print(get_player_macro_stats(url))
