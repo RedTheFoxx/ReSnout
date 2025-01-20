@@ -38,7 +38,7 @@ def get_player_macro_stats(url) -> dict:
     # Attendre que la page soit complètement chargée
     time.sleep(5)
 
-    stats = {"matches_played": 0, "playtime": "0h"}
+    macro_stats = {"matches_played": 0, "playtime": "0h"}
 
     try:
         mapping = XPATH_MAPPINGS["macro_stats"]
@@ -53,12 +53,12 @@ def get_player_macro_stats(url) -> dict:
         stats_text = element.text
 
         # Utiliser la fonction de traitement associée
-        stats = mapping.process_func(stats_text)
+        macro_stats = mapping.process_func(stats_text)
 
-        return stats
+        return macro_stats
 
     except Exception as e:
-        return stats
+        return macro_stats
     finally:
         time.sleep(5)  # Attendre 5 secondes avant de fermer le navigateur
         driver.quit()
