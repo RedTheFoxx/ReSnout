@@ -4,6 +4,9 @@ for extracting data from web pages.
 
 Each mapping specifies an XPATH expression used to locate elements in the HTML structure
 and a corresponding processing function to handle the data extracted from those elements.
+
+/!\ Warning, mappings are not always accurate and may evolve with the website updates.
+/!\ LAST VALID DATE : 2025-01-21
 """
 
 from typing import Dict, Any, Callable
