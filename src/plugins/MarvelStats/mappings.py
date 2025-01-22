@@ -64,11 +64,23 @@ def process_player_macro_stats(raw_text: str) -> Dict[str, Any]:
     return stats
 
 
+def process_player_kkww_stats(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from player KKWW stats.
+    """
+    return {"kkww": raw_text}
+
+
 # Dictionary of all XPATH mappings
 XPATH_MAPPINGS = {
+    # Represents Matches Played and Playtime for the current season
     "macro_stats": XPathMapping(
         xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/header/span",
         process_func=process_player_macro_stats,
     ),
-    # Add more mappings here as needed
+    # Represents Kills, KDA Ratio, Wins and Win % for the current season
+    "kkww": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/div/div[2]/div/div[1]/div/div/div[2]",
+        process_func=process_player_kkww_stats,
+    ),
 }
