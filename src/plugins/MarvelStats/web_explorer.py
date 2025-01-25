@@ -15,16 +15,17 @@ import time
 from mappings import XPATH_MAPPINGS
 
 
-def get_player_macro_stats(url) -> dict:
+def get_stats(url) -> dict:
     """
-    Fetches the macro statistics of a player from the given URL.
-    Macro stats include total playtime of the season and the number of matches played.
+    Fetches all player statistics from the given URL.
+    Combines macro stats (playtime, matches played), KKWW stats (kills, kda, wins, win percentage)
+    and season information (number and name).
 
     Args:
         url (str): The URL of the player's profile page to fetch stats from.
 
     Returns:
-        dict: A dictionary containing 'matches_played' and 'playtime'.
+        dict: A dictionary containing macro, KKWW statistics and season information.
     """
     chrome_options = Options()
     chrome_options.add_argument("--disable-gpu")
@@ -38,27 +39,49 @@ def get_player_macro_stats(url) -> dict:
     # Attendre que la page soit complètement chargée
     time.sleep(5)
 
-    macro_stats = {"matches_played": 0, "playtime": "0h"}
+    stats = {
+        "matches_played": 0,
+        "playtime": "0h",
+        "kills": 0,
+        "kda_ratio": 0.0,
+        "wins": 0,
+        "win_percentage": 0.0,
+        "season_number": 0,
+        "season_name": ""
+    }
 
     try:
-        mapping = XPATH_MAPPINGS["macro_stats"]
-        element = WebDriverWait(driver, 20).until(
-            EC.presence_of_element_located((By.XPATH, mapping.xpath))
+        # Récupérer les informations de la saison
+        season_mapping = XPATH_MAPPINGS["season"]
+        season_element = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, season_mapping.xpath))
         )
+        time.sleep(season_mapping.wait_time)
+        season_stats = season_mapping.process_func(season_element.text)
+        stats.update(season_stats)
 
-        # Attendre le temps spécifié dans le mapping
-        time.sleep(mapping.wait_time)
+        # Récupérer les statistiques macro
+        macro_mapping = XPATH_MAPPINGS["macro_stats"]
+        macro_element = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, macro_mapping.xpath))
+        )
+        time.sleep(macro_mapping.wait_time)
+        macro_stats = macro_mapping.process_func(macro_element.text)
+        stats.update(macro_stats)
 
-        # Extraire et traiter le texte
-        stats_text = element.text
+        # Récupérer les statistiques KKWW
+        kkww_mapping = XPATH_MAPPINGS["kkww"]
+        kkww_element = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, kkww_mapping.xpath))
+        )
+        time.sleep(kkww_mapping.wait_time)
+        kkww_stats = kkww_mapping.process_func(kkww_element.get_attribute("innerHTML"))
+        stats.update(kkww_stats)
 
-        # Utiliser la fonction de traitement associée
-        macro_stats = mapping.process_func(stats_text)
-
-        return macro_stats
+        return stats
 
     except Exception as e:
-        return macro_stats
+        return stats
     finally:
         time.sleep(5)  # Attendre 5 secondes avant de fermer le navigateur
         driver.quit()
@@ -66,5 +89,5 @@ def get_player_macro_stats(url) -> dict:
 
 if __name__ == "__main__":
     # Example usage
-    url = "https://tracker.gg/marvel-rivals/profile/ign/AsukaM/overview"
-    print(get_player_macro_stats(url))
+    url = "https://tracker.gg/marvel-rivals/profile/ign/RedFox/overview"
+    print(get_stats(url))
