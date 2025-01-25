@@ -14,7 +14,7 @@ sys.path.append(os.path.dirname(__file__))
 import discord
 from discord import app_commands
 from discord.ext import commands
-from web_explorer import get_player_macro_stats
+from web_explorer import get_stats
 from stats_view import create_stats_embed, create_error_embed
 
 class MarvelStats(commands.Cog):
@@ -40,7 +40,7 @@ class MarvelStats(commands.Cog):
             url = f"https://tracker.gg/marvel-rivals/profile/ign/{username}/overview"
             
             # Récupérer les statistiques
-            stats = get_player_macro_stats(url)
+            stats = get_stats(url)
             
             # Vérifier si les stats sont valides
             if not stats or stats.get("matches_played") == 0:
@@ -50,7 +50,13 @@ class MarvelStats(commands.Cog):
                 embed = create_stats_embed(
                     username=username,
                     matches_played=stats.get("matches_played", 0),
-                    playtime=stats.get("playtime", "0h")
+                    playtime=stats.get("playtime", "0h"),
+                    kills=stats.get("kills", 0),
+                    kda_ratio=stats.get("kda_ratio", 0.0),
+                    wins=stats.get("wins", 0),
+                    win_percentage=stats.get("win_percentage", 0.0),
+                    season_number=stats.get("season_number", 0),
+                    season_name=stats.get("season_name", "")
                 )
                 
         except Exception as e:
