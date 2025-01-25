@@ -5,8 +5,8 @@ for extracting data from web pages.
 Each mapping specifies an XPATH expression used to locate elements in the HTML structure
 and a corresponding processing function to handle the data extracted from those elements.
 
-/!\ Warning, mappings are not always accurate and may evolve with the website updates.
-/!\ LAST VALID DATE : 2025-01-21
+!!! Warning, mappings are not always accurate and may evolve with the website updates.
+!!! LAST VALID DATE : 2025-01-21
 """
 
 from typing import Dict, Any, Callable
@@ -66,13 +66,82 @@ def process_player_macro_stats(raw_text: str) -> Dict[str, Any]:
 
 def process_player_kkww_stats(raw_text: str) -> Dict[str, Any]:
     """
-    Process the raw text from player KKWW stats.
+    Process the raw text from player KKWW stats to extract:
+    - Kills
+    - KDA Ratio
+    - Wins
+    - Win %
     """
-    return {"kkww": raw_text}
+    stats = {
+        "kills": 0,
+        "kda_ratio": 0.0,
+        "wins": 0,
+        "win_percentage": 0.0
+    }
+
+    # Split the raw text into sections for each stat
+    sections = raw_text.split('<span data-v-61e89f95="" class="truncate">')
+    
+    for section in sections:
+        if "Kills</span>" in section:
+            # Extract kills value
+            kills_value = section.split('<span data-v-044b198d="" class="truncate">')[1].split(' <!---->')[0]
+            stats["kills"] = int(kills_value.replace(",", ""))
+            
+        elif "KDA Ratio</span>" in section:
+            # Extract KDA ratio value
+            kda_value = section.split('<span data-v-044b198d="" class="truncate">')[1].split(' <!---->')[0]
+            stats["kda_ratio"] = float(kda_value)
+            
+        elif "Wins</span>" in section:
+            # Extract wins value
+            wins_value = section.split('<span data-v-044b198d="" class="truncate">')[1].split(' <!---->')[0]
+            stats["wins"] = int(wins_value)
+            
+        elif "Win %</span>" in section:
+            # Extract win percentage value
+            win_percent = section.split('<span data-v-044b198d="" class="truncate">')[1].split(' <!---->')[0]
+            stats["win_percentage"] = float(win_percent.replace("%", ""))
+
+    return stats
+
+
+def process_season(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from season button to extract:
+    - season_number
+    - season_name
+    """
+    season_data = {
+        "season_number": 0,
+        "season_name": ""
+    }
+    
+    # Exemple de raw_text: "S1: Eternal Night Falls"
+    if ":" in raw_text:
+        parts = raw_text.split(":", 1)  # Split seulement sur la première occurrence
+        if len(parts) == 2:
+            # Partie gauche: numéro de saison
+            season_part = parts[0].strip()
+            if season_part.startswith("S"):
+                try:
+                    season_data["season_number"] = int(season_part[1:])
+                except ValueError:
+                    print(f"Erreur conversion numéro saison: {season_part[1:]}")
+            
+            # Partie droite: nom de la saison
+            season_data["season_name"] = parts[1].strip()
+    
+    return season_data
 
 
 # Dictionary of all XPATH mappings
 XPATH_MAPPINGS = {
+    # Represents current season number and name
+    "season": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[1]/div[2]",
+        process_func=process_season,
+    ),
     # Represents Matches Played and Playtime for the current season
     "macro_stats": XPathMapping(
         xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/header/span",
@@ -80,7 +149,7 @@ XPATH_MAPPINGS = {
     ),
     # Represents Kills, KDA Ratio, Wins and Win % for the current season
     "kkww": XPathMapping(
-        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/div/div[2]/div/div[1]/div/div/div[2]",
+        xpath="//div[contains(@class, 'v3-card__body')]//div[contains(@class, 'grid-cols-4')]",
         process_func=process_player_kkww_stats,
     ),
 }
