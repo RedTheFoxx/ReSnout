@@ -2,6 +2,34 @@ import discord
 import datetime
 
 
+RANK_IMAGES = {
+    "One Above All": "https://i.postimg.cc/yYjT5Y53/one-above-all.png",
+    "Eternity": "https://i.postimg.cc/90jp34CZ/eternity.png",
+    "Celestial": "https://i.postimg.cc/ZRNcDPtJ/celestial.webp",
+    "Grandmaster": "https://i.postimg.cc/J7bxNQ5q/grandmaster.png",
+    "Diamond": "https://i.postimg.cc/02PfcJtq/diamond.png",
+    "Platinum": "https://i.postimg.cc/jSjhrY0g/platine.webp",
+    "Gold": "https://i.postimg.cc/P5FQXVdt/gold.webp",
+    "Silver": "https://i.postimg.cc/PqpzPbq1/silver.webp",
+    "Bronze": "https://i.postimg.cc/xdwGHkkh/bronze.webp"
+}
+
+
+def get_rank_image(rank_name: str) -> str:
+    """
+    Get the image URL for a given rank name.
+    
+    Args:
+        rank_name (str): Name of the rank in format "Rank II" (e.g., "Diamond II")
+        
+    Returns:
+        str: URL of the rank image, or None if not found
+    """
+    # Prendre seulement la première partie du rang (avant le II)
+    base_rank = rank_name.split()[0] if rank_name else ""
+    return RANK_IMAGES.get(base_rank)
+
+
 def create_stats_embed(
     username: str,
     matches_played: int,
@@ -162,10 +190,12 @@ def create_current_rank_embed(username: str, rank_data: dict) -> discord.Embed:
     )
 
     embed.add_field(name="Division", value=f"```{rank_data['rank']}```", inline=True)
+    embed.add_field(name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True)
 
-    embed.add_field(
-        name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True
-    )
+    # Ajouter l'image du rang
+    rank_image = get_rank_image(rank_data['rank'])
+    if rank_image:
+        embed.set_thumbnail(url=rank_image)
 
     embed.set_footer(
         text="tracker.gg • Rang actuel",
@@ -194,13 +224,15 @@ def create_season_best_embed(username: str, rank_data: dict) -> discord.Embed:
     )
 
     embed.add_field(name="Division", value=f"```{rank_data['rank']}```", inline=True)
+    embed.add_field(name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True)
 
-    embed.add_field(
-        name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True
-    )
+    # Ajouter l'image du rang
+    rank_image = get_rank_image(rank_data['rank'])
+    if rank_image:
+        embed.set_thumbnail(url=rank_image)
 
     embed.set_footer(
-        text="tracker.gg • Record saisonnier",
+        text="tracker.gg • Record de la saison",
         icon_url="https://i.ibb.co/j3xcsRh/Capture-d-cran-2025-01-25-010142.png",
     )
     embed.timestamp = datetime.datetime.now()
@@ -222,14 +254,16 @@ def create_all_time_best_embed(username: str, rank_data: dict) -> discord.Embed:
     embed = discord.Embed(
         title="👑 Record historique",
         description=f"Votre record absolu",
-        color=discord.Color.purple(),
+        color=discord.Color.gold(),
     )
 
     embed.add_field(name="Division", value=f"```{rank_data['rank']}```", inline=True)
+    embed.add_field(name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True)
 
-    embed.add_field(
-        name="Points", value=f"```{rank_data['rank_points']} RS```", inline=True
-    )
+    # Ajouter l'image du rang
+    rank_image = get_rank_image(rank_data['rank'])
+    if rank_image:
+        embed.set_thumbnail(url=rank_image)
 
     embed.set_footer(
         text="tracker.gg • Record historique",
