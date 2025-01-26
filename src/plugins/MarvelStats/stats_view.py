@@ -99,4 +99,38 @@ def create_error_embed(username: str, error_type: str) -> discord.Embed:
         icon_url="https://i.ibb.co/j3xcsRh/Capture-d-cran-2025-01-25-010142.png"
     )
     
+    return embed
+
+def create_heroes_embed(username: str, top_heroes: list) -> discord.Embed:
+    """
+    Create a Discord embed to display top 3 heroes statistics
+    
+    Args:
+        username (str): Player's username
+        top_heroes (list): List of top 3 heroes with their stats
+        
+    Returns:
+        discord.Embed: Formatted embed with heroes statistics
+    """
+    embed = discord.Embed(
+        title="🌟 Top 3 Héros",
+        description=f"Vos spécialités :",
+        color=discord.Color.purple()
+    )
+    
+    # Ajouter les statistiques pour chaque héros avec une numérotation
+    for index, hero in enumerate(top_heroes, start=1):
+        embed.add_field(
+            name=f"{index}. {hero['hero_name']}",
+            value=f"```Winrate : {hero['win_rate']}%\nKDA : {hero['kda']:.2f}```",
+            inline=False
+        )
+    
+    # Footer cohérent avec le premier embed
+    embed.set_footer(
+        text="tracker.gg • Statistiques avancées",
+        icon_url="https://i.ibb.co/j3xcsRh/Capture-d-cran-2025-01-25-010142.png"
+    )
+    embed.timestamp = datetime.datetime.now()
+    
     return embed 

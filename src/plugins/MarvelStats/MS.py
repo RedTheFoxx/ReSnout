@@ -15,7 +15,7 @@ import discord
 from discord import app_commands
 from discord.ext import commands
 from web_explorer import get_stats
-from stats_view import create_stats_embed, create_error_embed
+from stats_view import create_stats_embed, create_error_embed, create_heroes_embed
 
 class MarvelStats(commands.Cog):
     def __init__(self, bot):
@@ -45,8 +45,9 @@ class MarvelStats(commands.Cog):
             # Vérifier si les stats sont valides
             if not stats or stats.get("matches_played") == 0:
                 embed = create_error_embed(username, "invalid_username")
+                await interaction.followup.send(embed=embed)
             else:
-                # Créer et envoyer l'embed
+                # Créer et envoyer l'embed principal
                 embed = create_stats_embed(
                     username=username,
                     matches_played=stats.get("matches_played", 0),
@@ -59,8 +60,15 @@ class MarvelStats(commands.Cog):
                     season_name=stats.get("season_name", "")
                 )
                 
+                # Si des héros sont disponibles, ajouter le deuxième embed
+                embeds = [embed]
+                if stats.get("top_heroes"):
+                    heroes_embed = create_heroes_embed(username, stats["top_heroes"])
+                    embeds.append(heroes_embed)
+                
+                await interaction.followup.send(embeds=embeds)
+                
         except Exception as e:
             # En cas d'erreur inattendue
             embed = create_error_embed(username, "api_error")
-            
-        await interaction.followup.send(embed=embed)
+            await interaction.followup.send(embed=embed)

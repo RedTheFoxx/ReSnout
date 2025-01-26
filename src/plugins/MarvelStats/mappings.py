@@ -135,6 +135,54 @@ def process_season(raw_text: str) -> Dict[str, Any]:
     return season_data
 
 
+def process_top_heroes(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from top heroes section to extract:
+    - hero_name
+    - win_rate
+    - kda
+    """
+    heroes = []
+    
+    # Split by individual hero sections
+    hero_sections = raw_text.split('<div class="flex gap-4 items-center">')
+    
+    for section in hero_sections[1:]:  # Skip first empty section
+        hero_data = {
+            "hero_name": "",
+            "win_rate": 0.0,
+            "kda": 0.0
+        }
+        
+        # Extract hero name
+        name_start = section.find('text-secondary">') + len('text-secondary">')
+        name_end = section.find('</span>', name_start)
+        if name_start != -1 and name_end != -1:
+            hero_data["hero_name"] = section[name_start:name_end].strip()
+        
+        # Extract win rate
+        wr_start = section.find('WR</span>')
+        if wr_start != -1:
+            wr_value = section[wr_start:].split('<!----></span>')[0].split('>')[-1].replace('%', '')
+            try:
+                hero_data["win_rate"] = float(wr_value)
+            except ValueError:
+                print(f"Erreur conversion win rate: {wr_value}")
+                
+        # Extract KDA
+        kda_start = section.find('KDA</span>')
+        if kda_start != -1:
+            kda_value = section[kda_start:].split('<!----></span>')[0].split('>')[-1]
+            try:
+                hero_data["kda"] = float(kda_value)
+            except ValueError:
+                print(f"Erreur conversion KDA: {kda_value}")
+        
+        heroes.append(hero_data)
+    
+    return {"top_heroes": heroes[:3]}  # Return only top 3 heroes
+
+
 # Dictionary of all XPATH mappings
 XPATH_MAPPINGS = {
     # Represents current season number and name
@@ -151,5 +199,10 @@ XPATH_MAPPINGS = {
     "kkww": XPathMapping(
         xpath="//div[contains(@class, 'v3-card__body')]//div[contains(@class, 'grid-cols-4')]",
         process_func=process_player_kkww_stats,
+    ),
+    # Represents the player's top 3 heroes
+    "top_heroes": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[1]/section[2]/div",
+        process_func=process_top_heroes,
     ),
 }

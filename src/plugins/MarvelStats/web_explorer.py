@@ -47,7 +47,8 @@ def get_stats(url) -> dict:
         "wins": 0,
         "win_percentage": 0.0,
         "season_number": 0,
-        "season_name": ""
+        "season_name": "",
+        "top_heroes": []
     }
 
     try:
@@ -77,6 +78,15 @@ def get_stats(url) -> dict:
         time.sleep(kkww_mapping.wait_time)
         kkww_stats = kkww_mapping.process_func(kkww_element.get_attribute("innerHTML"))
         stats.update(kkww_stats)
+
+        # Récupérer les top héros
+        top_heroes_mapping = XPATH_MAPPINGS["top_heroes"]
+        top_heroes_element = WebDriverWait(driver, 5).until(
+            EC.presence_of_element_located((By.XPATH, top_heroes_mapping.xpath))
+        )
+        time.sleep(top_heroes_mapping.wait_time)
+        top_heroes_stats = top_heroes_mapping.process_func(top_heroes_element.get_attribute("innerHTML"))
+        stats.update(top_heroes_stats)
 
         return stats
 
