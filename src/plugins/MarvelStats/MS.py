@@ -100,6 +100,9 @@ class MarvelStats(commands.Cog):
                 # Envoyer tous les embeds en une seule fois
                 await interaction.followup.send(embeds=embeds)
 
+                # Supprimer le message "Snout fait ses recherches..."
+                await interaction.delete_original_response()
+
         except Exception as e:
             # En cas d'erreur inattendue
             embed = create_error_embed(username, "api_error")
