@@ -49,21 +49,9 @@ def get_stats(url) -> dict:
         "season_number": 0,
         "season_name": "",
         "top_heroes": [],
-        "current_rank": {
-            "rank": "",
-            "rank_points": 0,
-            "rank_image": ""
-        },
-        "season_best": {
-            "rank": "",
-            "rank_points": 0,
-            "rank_image": ""
-        },
-        "all_time_best": {
-            "rank": "",
-            "rank_points": 0,
-            "rank_image": ""
-        }
+        "current_rank": {"rank": "", "rank_points": 0, "rank_image": ""},
+        "season_best": {"rank": "", "rank_points": 0, "rank_image": ""},
+        "all_time_best": {"rank": "", "rank_points": 0, "rank_image": ""},
     }
 
     try:
@@ -100,7 +88,9 @@ def get_stats(url) -> dict:
             EC.presence_of_element_located((By.XPATH, top_heroes_mapping.xpath))
         )
         time.sleep(top_heroes_mapping.wait_time)
-        top_heroes_stats = top_heroes_mapping.process_func(top_heroes_element.get_attribute("innerHTML"))
+        top_heroes_stats = top_heroes_mapping.process_func(
+            top_heroes_element.get_attribute("innerHTML")
+        )
         stats.update(top_heroes_stats)
 
         # Récupérer le current rank
@@ -109,7 +99,9 @@ def get_stats(url) -> dict:
             EC.presence_of_element_located((By.XPATH, current_rank_mapping.xpath))
         )
         time.sleep(current_rank_mapping.wait_time)
-        current_rank_stats = current_rank_mapping.process_func(current_rank_element.get_attribute("innerHTML"))
+        current_rank_stats = current_rank_mapping.process_func(
+            current_rank_element.get_attribute("innerHTML")
+        )
         stats["current_rank"].update(current_rank_stats)
 
         # Récupérer le season best rank
@@ -118,7 +110,9 @@ def get_stats(url) -> dict:
             EC.presence_of_element_located((By.XPATH, season_best_mapping.xpath))
         )
         time.sleep(season_best_mapping.wait_time)
-        season_best_stats = season_best_mapping.process_func(season_best_element.get_attribute("innerHTML"))
+        season_best_stats = season_best_mapping.process_func(
+            season_best_element.get_attribute("innerHTML")
+        )
         stats["season_best"].update(season_best_stats)
 
         # Récupérer le all-time best rank
@@ -127,7 +121,9 @@ def get_stats(url) -> dict:
             EC.presence_of_element_located((By.XPATH, all_time_best_mapping.xpath))
         )
         time.sleep(all_time_best_mapping.wait_time)
-        all_time_best_stats = all_time_best_mapping.process_func(all_time_best_element.get_attribute("innerHTML"))
+        all_time_best_stats = all_time_best_mapping.process_func(
+            all_time_best_element.get_attribute("innerHTML")
+        )
         stats["all_time_best"].update(all_time_best_stats)
 
         return stats
