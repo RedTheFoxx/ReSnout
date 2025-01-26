@@ -183,6 +183,140 @@ def process_top_heroes(raw_text: str) -> Dict[str, Any]:
     return {"top_heroes": heroes[:3]}  # Return only top 3 heroes
 
 
+def get_rank_image(rank: str) -> str:
+    """
+    Get the relative path to the rank image based on the rank name.
+    
+    Args:
+        rank (str): The rank name (e.g., 'Diamond II', 'Master III')
+        
+    Returns:
+        str: The relative path to the rank image
+    """
+    # Extract the base rank (remove roman numerals)
+    base_rank = rank.split()[0].lower()
+    
+    # Special case for ranks above Celestial
+    if base_rank in ['eternal', 'one above all']:
+        return 'images/ranks/eternity.png'
+        
+    # Map rank names to image files
+    rank_images = {
+        'bronze': 'images/ranks/bronze.png',
+        'silver': 'images/ranks/silver.png',
+        'gold': 'images/ranks/gold.png',
+        'platine': 'images/ranks/platine.png',
+        'diamond': 'images/ranks/diamond.png',
+        'grandmaster': 'images/ranks/grandmaster.png',
+        'celestial': 'images/ranks/celestial.png'
+    }
+    
+    return rank_images.get(base_rank, 'images/ranks/bronze.png')  # Default to bronze if rank not found
+
+
+def process_current_rank(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from current rank element to extract:
+    - rank (e.g., "Gold I")
+    - rank_points (e.g., 3832)
+    - rank_image (e.g., "images/ranks/gold.png")
+    """
+    rank_data = {
+        "rank": "",
+        "rank_points": 0,
+        "rank_image": ""
+    }
+    
+    # Extract rank name
+    rank_start = raw_text.find('class="truncate">') + len('class="truncate">')
+    rank_end = raw_text.find('</span>', rank_start)
+    if rank_start != -1 and rank_end != -1:
+        rank_data["rank"] = raw_text[rank_start:rank_end].strip()
+        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
+    
+    # Extract rank points
+    points_start = raw_text.find('class="truncate">', rank_end) + len('class="truncate">')
+    points_end = raw_text.find(' <span', points_start)
+    if points_start != -1 and points_end != -1:
+        points_value = raw_text[points_start:points_end].replace(",", "")
+        try:
+            rank_data["rank_points"] = int(points_value)
+        except ValueError:
+            print(f"Error converting rank points: {points_value}")
+    
+    return rank_data
+
+
+def process_season_best(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from season best element to extract:
+    - rank (e.g., "Platinum II")
+    - rank_points (e.g., 4039)
+    - rank_image (e.g., "images/ranks/platine.png")
+    """
+    rank_data = {
+        "rank": "",
+        "rank_points": 0,
+        "rank_image": ""
+    }
+    
+    # Extract rank name
+    rank_start = raw_text.find('alt="') + len('alt="')
+    rank_end = raw_text.find('"', rank_start)
+    if rank_start != -1 and rank_end != -1:
+        rank_data["rank"] = raw_text[rank_start:rank_end].strip()
+        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
+    
+    # Extract rank points
+    points_start = raw_text.find('class="stat-value')
+    if points_start != -1:
+        points_start = raw_text.find('class="truncate">', points_start) + len('class="truncate">')
+        points_end = raw_text.find('<', points_start)
+        if points_start != -1 and points_end != -1:
+            points_value = raw_text[points_start:points_end].replace(",", "").strip()
+            try:
+                rank_data["rank_points"] = int(points_value)
+            except ValueError:
+                print(f"Error converting rank points: {points_value}")
+    
+    return rank_data
+
+
+def process_all_time_best(raw_text: str) -> Dict[str, Any]:
+    """
+    Process the raw text from all-time best element to extract:
+    - rank (e.g., "Diamond II")
+    - rank_points (e.g., 4317)
+    - rank_image (e.g., "images/ranks/diamond.png")
+    """
+    rank_data = {
+        "rank": "",
+        "rank_points": 0,
+        "rank_image": ""
+    }
+    
+    # Extract rank name from alt attribute
+    rank_start = raw_text.find('alt="') + len('alt="')
+    rank_end = raw_text.find('"', rank_start)
+    if rank_start != -1 and rank_end != -1:
+        rank_data["rank"] = raw_text[rank_start:rank_end].split(" // ")[0].strip()
+        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
+    
+    # Extract rank points
+    points_start = raw_text.find('class="stat-value')
+    if points_start != -1:
+        points_start = raw_text.find('class="truncate">', points_start) + len('class="truncate">')
+        points_end = raw_text.find('<', points_start)
+        if points_start != -1 and points_end != -1:
+            points_value = raw_text[points_start:points_end].replace(",", "").strip()
+            try:
+                rank_data["rank_points"] = int(points_value)
+            except ValueError:
+                print(f"Error converting rank points: {points_value}")
+    
+    return rank_data
+
+
 # Dictionary of all XPATH mappings
 XPATH_MAPPINGS = {
     # Represents current season number and name
@@ -204,5 +338,20 @@ XPATH_MAPPINGS = {
     "top_heroes": XPathMapping(
         xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[1]/section[2]/div",
         process_func=process_top_heroes,
+    ),
+    # Represents the player's current rank
+    "current_rank": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/div/div[1]/div[1]/div[1]/div[2]/div",
+        process_func=process_current_rank,
+    ),
+    # Represents the player's season best rank
+    "season_best": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/div/div[1]/div[1]/div[1]/div[3]",
+        process_func=process_season_best,
+    ),
+    # Represents the player's all-time best rank
+    "all_time_best": XPathMapping(
+        xpath="/html/body/div/div/div[2]/div[3]/div/main/div[3]/div[2]/div/div[3]/div/div[2]/section/div/div[1]/div[1]/div[1]/div[4]",
+        process_func=process_all_time_best,
     ),
 }
