@@ -38,5 +38,5 @@ required = false
 
 [MarvelStats]
 path = "plugins.MarvelStats.MS"
-class = "Marvel"
+class = "MarvelStats"
 required = false
