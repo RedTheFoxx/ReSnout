@@ -27,6 +27,9 @@ def get_rank_image(rank_name: str) -> str:
     """
     # Prendre seulement la première partie du rang (avant le II)
     base_rank = rank_name.split()[0] if rank_name else ""
+    # Ajouter une vérification pour "One Above All" qui contient des espaces
+    if "One Above All" in rank_name:
+        base_rank = "One Above All"
     return RANK_IMAGES.get(base_rank)
 
 
