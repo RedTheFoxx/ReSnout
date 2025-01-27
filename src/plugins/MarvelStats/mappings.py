@@ -184,38 +184,6 @@ def process_top_heroes(raw_text: str) -> Dict[str, Any]:
     return {"top_heroes": heroes[:3]}  # Return only top 3 heroes
 
 
-def get_rank_image(rank: str) -> str:
-    """
-    Get the relative path to the rank image based on the rank name.
-
-    Args:
-        rank (str): The rank name (e.g., 'Diamond II', 'Master III')
-
-    Returns:
-        str: The relative path to the rank image
-    """
-    # Extract the base rank (remove roman numerals)
-    base_rank = rank.split()[0].lower()
-
-    # Special case for ranks above Celestial
-    if base_rank in ["eternal", "one above all"]:
-        return "images/ranks/eternity.png"
-
-    # Map rank names to image files
-    rank_images = {
-        "bronze": "images/ranks/bronze.png",
-        "silver": "images/ranks/silver.png",
-        "gold": "images/ranks/gold.png",
-        "platine": "images/ranks/platine.png",
-        "diamond": "images/ranks/diamond.png",
-        "grandmaster": "images/ranks/grandmaster.png",
-        "celestial": "images/ranks/celestial.png",
-    }
-
-    return rank_images.get(
-        base_rank, "images/ranks/bronze.png"
-    )  # Default to bronze if rank not found
-
 
 def process_current_rank(raw_text: str) -> Dict[str, Any]:
     """
@@ -231,7 +199,6 @@ def process_current_rank(raw_text: str) -> Dict[str, Any]:
     rank_end = raw_text.find("</span>", rank_start)
     if rank_start != -1 and rank_end != -1:
         rank_data["rank"] = raw_text[rank_start:rank_end].strip()
-        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
 
     # Extract rank points
     points_start = raw_text.find('class="truncate">', rank_end) + len(
@@ -262,7 +229,6 @@ def process_season_best(raw_text: str) -> Dict[str, Any]:
     rank_end = raw_text.find('"', rank_start)
     if rank_start != -1 and rank_end != -1:
         rank_data["rank"] = raw_text[rank_start:rank_end].strip()
-        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
 
     # Extract rank points
     points_start = raw_text.find('class="stat-value')
@@ -295,7 +261,6 @@ def process_all_time_best(raw_text: str) -> Dict[str, Any]:
     rank_end = raw_text.find('"', rank_start)
     if rank_start != -1 and rank_end != -1:
         rank_data["rank"] = raw_text[rank_start:rank_end].split(" // ")[0].strip()
-        rank_data["rank_image"] = get_rank_image(rank_data["rank"])
 
     # Extract rank points
     points_start = raw_text.find('class="stat-value')
@@ -310,7 +275,7 @@ def process_all_time_best(raw_text: str) -> Dict[str, Any]:
                 rank_data["rank_points"] = int(points_value)
             except ValueError:
                 print(f"Error converting rank points: {points_value}")
-
+    
     return rank_data
 
 
