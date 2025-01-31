@@ -6,8 +6,7 @@ enabled = [
     "SimpleOps",
     "RichNotifier",
     "MusicPlayer",
-    "CemantixGame",
-    "MarvelStats"
+    "CemantixGame"
 ]
 
 # ----- DECLARED PLUGINS -----
