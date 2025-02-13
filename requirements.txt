@@ -7,3 +7,4 @@ gensim
 pathlib
 SQLAlchemy
 selenium
+undetected-chromedriver
