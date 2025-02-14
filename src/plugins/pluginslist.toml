@@ -39,3 +39,8 @@ required = false
 path = "plugins.MarvelStats.MS"
 class = "MarvelStats"
 required = false
+
+[FarkleGame]
+path = "plugins.FarkleGame.FG"
+class = "FarkleGame"
+required = false

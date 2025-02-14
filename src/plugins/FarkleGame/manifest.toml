@@ -1,0 +1,4 @@
+[metadata]
+name = "FarkleGame"
+description = "A Discord implementation of the Farkle dice game."
+commands = []
