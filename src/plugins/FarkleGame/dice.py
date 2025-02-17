@@ -1,3 +1,5 @@
+"""Class of a six-sided die with rolling functionality and ASCII representation."""
+
 import random
 
 class Dice:
