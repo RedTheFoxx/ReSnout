@@ -1,8 +1,15 @@
 """Farkle Game"""
 
+import sys
+import os
+
+# Add to python path to use local plugin files dependencies
+sys.path.append(os.path.join(os.path.dirname(__file__), "../.."))
+
 import discord
 from discord.ext import commands
 from discord import app_commands, Interaction
+from plugins.FarkleGame.farkle_view import FarkleView
 
 class FarkleGame(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -15,5 +22,8 @@ class FarkleGame(commands.Cog):
         """
         Lancer une partie de Farkle
         """
-        await interaction.response.defer(thinking=True, ephemeral=True)
-        await interaction.followup.send("Farkle Game is not available yet", ephemeral=True)
+        game_view = FarkleView(self.bot)
+        embed = game_view.create_initial_embed()
+        view, roll_button, bank_button, end_button = game_view.create_game_buttons()
+        
+        await interaction.response.send_message(embed=embed, view=view)
