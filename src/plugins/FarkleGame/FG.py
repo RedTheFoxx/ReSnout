@@ -22,8 +22,21 @@ class FarkleGame(commands.Cog):
         """
         Lancer une partie de Farkle
         """
+        # Create a new thread for the game
+        thread = await interaction.channel.create_thread(
+            name=f"Partie de Farkle de {interaction.user.display_name}",
+            type=discord.ChannelType.public_thread,
+            auto_archive_duration=60
+        )
+        
+        # Notify the user about the new thread
+        await interaction.response.send_message(
+            f"Une nouvelle partie de Farkle a été créée ! Rendez-vous dans {thread.mention} pour jouer !",
+            ephemeral=True
+        )
+        
+        # Start the game in the thread
         game_view = FarkleView(self.bot)
         embed = game_view.create_initial_embed()
         view, roll_button, bank_button, end_button = game_view.create_game_buttons()
-        
-        await interaction.response.send_message(embed=embed, view=view)
+        await thread.send(embed=embed, view=view)
