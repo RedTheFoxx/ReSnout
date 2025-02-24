@@ -1,28 +1,30 @@
 ```mermaid	
 classDiagram
     class FarkleGame {
-        -players: list[Player]
+        -players: List[Player]
         -current_player: Player
-        -dice: list[Dice]
-        -current_roll: list[int]
-        -kept_dice: list[int]
-        -total_score: int
-        -current_score: int
+        -current_roll: List[int]
+        -kept_dice: List[int]
+        -turn_score: int
         -game_state: GameState
-        -start_score: int
-        -history: list[GameHistory]
-        +start_game(players: list)
-        +end_game()
+        -target_score: int
+        -history: List[GameHistory]
+        -current_turn_combinations: List
+        -hot_dice: bool
+        +display_game_state()
+        +start_game(players: List[str])
         +roll_dice()
-        +select_dice(dice_values: list[int])
+        +find_all_scoring_combinations(dice: List[int]) List[Tuple]
+        +select_dice(dice_values: List[int])
+        +select_combination(combination_index: int)
         +bank_score()
-        +calculate_score(dice_values: list[int]) int
-        +is_farkle(dice_values: list[int]) bool
-        +is_valid_selection(dice_values: list[int]) bool
+        +calculate_score(dice_values: List[int]) int
+        +is_farkle(dice_values: List[int]) bool
         +next_player()
-        +save_game_state()
-        +load_game_state()
-        +get_leaderboard() list[Player]
+        +end_game()
+        +display_leaderboard()
+        +display_help()
+        +display_rules()
     }
 
     class Player {
@@ -30,7 +32,9 @@ classDiagram
         -total_score: int
         -games_played: int
         -average_score: float
+        -wins: int
         +update_stats()
+        +__str__()
     }
 
     class GameState {
@@ -44,13 +48,14 @@ classDiagram
     }
 
     class GameHistory {
-        -players: list[Player]
-        -scores: dict
+        -players: List[Player]
+        -scores: Dict
         -date: datetime
+        -winner: str
+        +__str__()
     }
 
     FarkleGame "1" *-- "1" GameState
     FarkleGame "1" *-- "many" Player
-    FarkleGame "1" *-- "6" Dice
     FarkleGame "1" *-- "many" GameHistory
 ```
